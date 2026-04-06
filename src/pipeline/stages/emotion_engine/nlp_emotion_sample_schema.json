@@ -1,0 +1,20 @@
+{
+  "architecture": {
+    "tokenizer": "WhitespaceTokenizer",
+    "encoder": "LexicalFeatureEncoder",
+    "head": "EmotionProjectionHead"
+  },
+  "input": {
+    "type": "string",
+    "description": "Raw user query"
+  },
+  "output": {
+    "type": "EmotionState",
+    "fields": {
+      "emotional_valence": "float[-1,1]",
+      "activation_level": ["low", "medium", "high"],
+      "social_orientation": ["withdrawn", "neutral", "reaching"],
+      "stability": ["stable", "fragile", "volatile"]
+    }
+  }
+}
