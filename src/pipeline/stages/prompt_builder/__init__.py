@@ -1,3 +1,3 @@
-from .stage import DefaultPromptBuilder
+from .prompt_assembler import DefaultPromptBuilder, PromptAssembler
 
-__all__ = ["DefaultPromptBuilder"]
+__all__ = ["PromptAssembler", "DefaultPromptBuilder"]

@@ -1,0 +1,21 @@
+{
+  "sources": {
+    "dair-ai/emotion": {
+      "train_rows": 16000,
+      "validation_rows": 2000,
+      "test_rows": 2000
+    },
+    "Alignment-Lab-AI/EmotionDialogue": {
+      "train_rows": 0
+    }
+  },
+  "outputs": {
+    "processed/dair_ai_train.jsonl": "dataset\\processed\\dair_ai_train.jsonl",
+    "processed/dair_ai_validation.jsonl": "dataset\\processed\\dair_ai_validation.jsonl",
+    "processed/dair_ai_test.jsonl": "dataset\\processed\\dair_ai_test.jsonl",
+    "processed/emotion_dialogue.jsonl": "dataset\\processed\\emotion_dialogue.jsonl",
+    "emotion_train.jsonl": "dataset\\emotion_train.jsonl",
+    "emotion_validation.jsonl": "dataset\\emotion_validation.jsonl",
+    "emotion_test.jsonl": "dataset\\emotion_test.jsonl"
+  }
+}

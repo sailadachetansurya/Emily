@@ -12,13 +12,16 @@ def main() -> None:
         user_input="I have been feeling lonely and anxious lately.",
         trace_id=str(uuid.uuid4()),
     )
-    response = pipeline.run(request)
+    result = pipeline.run(request)
     print("Response:")
-    print(response.text)
-    if response.safety_notes:
+    print(result.response.text)
+    if result.response.safety_notes:
         print("Safety notes:")
-        for note in response.safety_notes:
+        for note in result.response.safety_notes:
             print(f"- {note}")
+    print("Traces:")
+    for trace in result.traces:
+        print(f"- {trace.stage_name}: {trace.status}")
 
 
 if __name__ == "__main__":

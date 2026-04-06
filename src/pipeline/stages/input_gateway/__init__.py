@@ -1,3 +1,3 @@
-from .stage import DefaultInputGateway
+from .input_normalizer import DefaultInputGateway
 
 __all__ = ["DefaultInputGateway"]

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Emily Emotive AI Runtime Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_name",
+    "ollama_base_url",
+    "request_timeout_seconds",
+    "ollama_stream",
+    "ollama_generate_path",
+    "telemetry_path",
+    "max_factual_items",
+    "max_emotional_items"
+  ],
+  "properties": {
+    "model_name": { "type": "string", "minLength": 1 },
+    "ollama_base_url": { "type": "string", "minLength": 1 },
+    "request_timeout_seconds": { "type": "integer", "minimum": 1 },
+    "ollama_stream": { "type": "boolean" },
+    "ollama_generate_path": { "type": "string", "minLength": 1 },
+    "emotion_model_kind": { "type": "string", "enum": ["heuristic", "nlp_sample"] },
+    "telemetry_path": { "type": "string", "minLength": 1 },
+    "max_factual_items": { "type": "integer", "minimum": 1 },
+    "max_emotional_items": { "type": "integer", "minimum": 1 }
+  }
+}

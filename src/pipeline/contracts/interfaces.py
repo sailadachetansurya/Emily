@@ -5,6 +5,7 @@ from .models import (
     GenerationResult,
     MemoryContext,
     PromptBundle,
+    PrunedResponse,
     RequestEnvelope,
     ResponsePolicy,
     SafeResponse,
@@ -43,4 +44,14 @@ class LLMClient(Protocol):
 
 class SafetyProcessor(Protocol):
     def validate(self, generation: GenerationResult, policy: ResponsePolicy) -> SafeResponse:
+        ...
+
+
+class OutputPruner(Protocol):
+    def prune(self, generation: GenerationResult, policy: ResponsePolicy) -> PrunedResponse:
+        ...
+
+
+class TelemetrySink(Protocol):
+    def emit(self, trace_name: str, payload: dict[str, object]) -> None:
         ...

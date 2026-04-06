@@ -1,0 +1,9 @@
+{
+  "modes": {
+    "reflection": {"max_tokens": 80, "temperature": 0.7},
+    "validation": {"max_tokens": 90, "temperature": 0.7},
+    "soft_question": {"max_tokens": 120, "temperature": 0.8},
+    "brief_presence": {"max_tokens": 70, "temperature": 0.6},
+    "gentle_redirection": {"max_tokens": 90, "temperature": 0.7}
+  }
+}

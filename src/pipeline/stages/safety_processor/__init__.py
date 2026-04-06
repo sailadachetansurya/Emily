@@ -1,3 +1,3 @@
-from .stage import DefaultSafetyProcessor
+from .response_guard import DefaultSafetyProcessor, OutputPruner, ProjectionSafetyProcessor
 
-__all__ = ["DefaultSafetyProcessor"]
+__all__ = ["OutputPruner", "ProjectionSafetyProcessor", "DefaultSafetyProcessor"]
