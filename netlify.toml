@@ -1,0 +1,16 @@
+[build]
+  # Tell Netlify that the frontend app lives in the web directory
+  base = "web"
+  publish = ".next"
+  command = "npm run build"
+
+[[plugins]]
+  # This plugin gives native Next.js support on Netlify
+  package = "@netlify/plugin-nextjs"
+
+# Optional: Add generic redirects or headers if needed
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  condition = {Role = ["admin"]} # Ignored unless using Netlify Identity, keeps Next.js routing intact
