@@ -1,0 +1,10 @@
+# Emily API Dependencies
+# Install with: .venv\Scripts\pip install -r requirements-api.txt
+
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# CORS support (included with fastapi)
+# Optional: for production deployment
+# gunicorn>=21.0.0

@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Archivo+Black&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --background: #050505;
+  --surface: #0a0a0a;
+  --card: #121212;
+  --border: #ffffff;
+  --border-muted: #333333;
+  --text: #ffffff;
+  --text-muted: #a1a1aa;
+  --electric-violet: #8b5cf6;
+  --electric-green: #a3e635;
+  --electric-orange: #f97316;
+  --electric-pink: #ec4899;
+  --electric-cyan: #06b6d4;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+/* NEUBRUTALISM BASE STYLES */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .font-display {
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  /* CARD COMPONENT - NEUBRUTALISM */
+  .neuro-card {
+    @apply bg-card border-2 border-border rounded-lg;
+    @apply shadow-hard-sm;
+    @apply transition-all duration-200 ease-snap;
+  }
+
+  .neuro-card:hover {
+    @apply shadow-hard;
+    @apply translate-x-[-2px] translate-y-[-2px];
+  }
+
+  .neuro-card:active {
+    @apply shadow-none;
+    @apply translate-x-[4px] translate-y-[4px];
+  }
+
+  /* BUTTON COMPONENT */
+  .neuro-btn {
+    @apply px-6 py-3;
+    @apply font-display font-bold text-sm uppercase tracking-wider;
+    @apply border-2 border-border;
+    @apply rounded-md;
+    @apply shadow-hard-sm;
+    @apply transition-all duration-150 ease-snap;
+    @apply cursor-pointer;
+  }
+
+  .neuro-btn:hover {
+    @apply shadow-hard;
+    @apply translate-x-[-2px] translate-y-[-2px];
+  }
+
+  .neuro-btn:active {
+    @apply shadow-none;
+    @apply translate-x-[2px] translate-y-[2px];
+  }
+
+  .neuro-btn-primary {
+    @apply bg-electric-violet text-white;
+  }
+
+  .neuro-btn-secondary {
+    @apply bg-transparent text-border hover:bg-border hover:text-background;
+  }
+
+  .neuro-btn-accent {
+    @apply bg-electric-green text-black;
+  }
+
+  .neuro-btn-danger {
+    @apply bg-electric-orange text-black;
+  }
+
+  /* INPUT COMPONENT */
+  .neuro-input {
+    @apply w-full px-4 py-3;
+    @apply bg-surface border-2 border-borderMuted;
+    @apply text-text font-mono text-sm;
+    @apply rounded-md;
+    @apply focus:outline-none focus:border-electric-violet;
+    @apply focus:shadow-glow-violet;
+    @apply transition-all duration-150 ease-snap;
+  }
+
+  .neuro-input::placeholder {
+    @apply text-textMuted;
+  }
+
+  /* BENTO GRID */
+  .bento-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  .bento-span-2 {
+    @apply md:col-span-2;
+  }
+
+  .bento-span-full {
+    @apply md:col-span-4;
+  }
+
+  /* GLITCH TEXT EFFECT */
+  .glitch-text {
+    @apply relative;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    @apply absolute inset-0;
+    @apply opacity-0.5;
+  }
+
+  .glitch-text::before {
+    @apply text-electric-violet;
+    animation: glitch-1 2s infinite;
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    transform: translate(-2px, 0);
+  }
+
+  .glitch-text::after {
+    @apply text-electric-cyan;
+    animation: glitch-2 3s infinite;
+    clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+    transform: translate(2px, 0);
+  }
+
+  @keyframes glitch-1 {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-3px, 0); }
+    40% { transform: translate(3px, 0); }
+    60% { transform: translate(-1px, 0); }
+    80% { transform: translate(1px, 0); }
+  }
+
+  @keyframes glitch-2 {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(2px, 0); }
+    40% { transform: translate(-2px, 0); }
+    60% { transform: translate(1px, 0); }
+    80% { transform: translate(-1px, 0); }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-borderMuted rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border;
+  }
+}
+
+@layer utilities {
+  .text-glow-violet {
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+  }
+
+  .text-glow-green {
+    text-shadow: 0 0 10px rgba(163, 230, 53, 0.5);
+  }
+
+  .text-glow-orange {
+    text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  }
+
+  .border-neon-violet {
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+  }
+
+  .border-neon-green {
+    box-shadow: 0 0 10px rgba(163, 230, 53, 0.5);
+  }
+
+  .border-neon-orange {
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  }
+}

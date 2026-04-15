@@ -1,0 +1,711 @@
+================================================================================
+ECHO (Emotional Chronicle Helping observations) - MASTER BUILD PROMPT
+Emotional Memory + Mental Health Wellness Platform
+================================================================================
+O GRADE | OPTIMIZED | PRODUCTION-READY
+================================================================================
+
+PROJECT VISION:
+ECHO (Emotional Chronicle Helping observations) is a web platform that combines mental health & wellness 
+support with advanced emotional memory tracking & temporal analysis. Users 
+journal about their emotional experiences, and the system discovers patterns, 
+triggers, relationships, and recovery trajectories over time—providing 
+actionable wellness insights with empathy and safety.
+
+================================================================================
+SYSTEM ARCHITECTURE OVERVIEW
+================================================================================
+
+Frontend:
+  - React 18 + TypeScript (SPA)
+  - Zustand state management
+  - Emotion/Styled Components (theme-aware)
+  - Recharts for temporal visualization
+  - TailwindCSS + accessibility focus
+
+Backend:
+  - Node.js/Express OR Python FastAPI
+  - SQLite/PostgreSQL for structured data
+  - Vector embeddings for emotional memory
+  - JWT authentication
+  - Background job queue (Bull/Celery)
+
+Core Systems:
+  - Emily AI Integration (emotion engine, policy system)
+  - Emotional Memory Graph (embeddings + temporal relationships)
+  - Trigger Pattern Mining
+  - Recovery Trajectory Analysis
+  - Safe Escalation Logic (crisis detection)
+  - Relationship Evolution Analyzer
+
+Data Flow:
+  [User Input] → [Emily Emotion Engine] → [Emotional Memory Store]
+             → [Pattern Analyzer] → [Timeline Visualizer] → [Insights]
+
+================================================================================
+CORE FEATURES TO BUILD
+================================================================================
+
+TIER 1: MVP ESSENTIALS
+─────────────────────────────────────────────────────────────────────────
+
+1. EMOTIONAL JOURNALING INTERFACE
+   
+   User Story: "I want to write about my feelings and have the system 
+   understand what I'm experiencing."
+   
+   Components:
+   - Rich text editor (markdown support)
+   - Mood selector (quick emotional tag)
+   - Emotion intensity slider (1-10)
+   - Optional structured fields:
+     * "What triggered this?" (trigger extraction)
+     * "Who was involved?" (relationship tagging)
+     * "What themes emerge?" (auto-suggested from history)
+   - Auto-save draft recovery
+   - Privacy indicator (private/shareable)
+   
+   Emily Integration:
+   - Real-time emotion state extraction
+   - Confidence scores on emotion classification
+   - Speech-act validation (ensure response safety)
+   
+   Output: EmotionalEntry record
+   ```
+   {
+     id, user_id, timestamp,
+     raw_text, emotion_state (valence, activation, stability),
+     themes[], triggers[], relationships[],
+     ai_summary, confidence, tags
+   }
+   ```
+
+
+2. EMOTIONAL MEMORY TIMELINE
+   
+   User Story: "I want to see how my emotional state has evolved around 
+   specific topics or people over weeks and months."
+   
+   Visualization:
+   - Interactive timeline (month/week/day views)
+   - Color-coded by emotion (heat map style)
+   - Hover to see entry snippet + emotion state
+   - Filter by:
+     * Date range
+     * Emotion type (anxiety, loneliness, joy, etc.)
+     * Trigger/theme
+     * Relationship
+   - Trend indicators (improving/worsening arrows)
+   
+   Analytics Backing:
+   - Emotional state interpolation between entries
+   - Volatility calculation (stability metric)
+   - Activation trends (arousal over time)
+   - Recovery time metrics
+   
+   Query Layer:
+   ```sql
+   SELECT entries WITH:
+     - Temporal ordering
+     - Emotion state aggregation
+     - Trend calculation
+     - Volatility scoring
+   ```
+
+
+3. TRIGGER MAPPING DASHBOARD
+   
+   User Story: "I want to understand what situations consistently 
+   trigger my anxiety or sadness, and see if I'm improving."
+   
+   Components:
+   - Trigger heatmap (frequency × impact over time)
+   - Top triggers list (ranked by frequency + severity)
+   - Trigger-to-emotion correlation matrix
+   - Trigger evolution graph (reducing/increasing pattern)
+   - Mitigation suggestions (based on policy system)
+   
+   Trigger Extraction:
+   - NLP-based extraction from journal entries
+   - User confirmation/refinement
+   - Categorization (work, relationships, health, financial, etc.)
+   - Confidence scoring
+   
+   Pattern Mining:
+   - Weekly/monthly trigger cycles
+   - Environmental triggers (time of day, season)
+   - Social triggers (specific people/situations)
+   - Compound triggers (multiple converging)
+   
+   Recovery Insights:
+   - Average recovery time by trigger type
+   - Most effective coping strategies (from entries)
+   - Trigger avoidance vs. resilience tracking
+
+
+4. RELATIONSHIP EMOTIONAL ANALYZER
+   
+   User Story: "I want to understand how specific relationships are 
+   affecting my emotional wellbeing and how they're evolving."
+   
+   Components:
+   - Relationship timeline (emotional tone over time)
+   - Sentiment trajectory (positive/negative/neutral trend)
+   - Emotional pattern with person (anxiety spikes? joy? trust?)
+   - Conflict/resolution cycles
+   - Support quality assessment
+   - Emotional volatility when relationship is mentioned
+   
+   Relationship Extraction:
+   - Named entity recognition (people mentions)
+   - Context analysis (co-occurrence with emotions)
+   - Sentiment polarity per mention
+   - Trust/safety scoring
+   
+   Longitudinal Tracking:
+   - Timeline shows emotional evolution of relationship
+   - Turning points/pivotal moments highlighted
+   - Interaction frequency × emotional impact
+   - Improvement/deterioration indicators
+   
+   Insights Generated:
+   - "Your emotional stability increased after interactions with Alice"
+   - "Conversations with work colleagues trigger anxiety 80% of the time"
+   - "This relationship shows improving trust over 3 months"
+   - "Recommended: More frequent positive interactions"
+
+
+5. RECOVERY PROGRESS DASHBOARD
+   
+   User Story: "I'm in recovery from depression/anxiety and want to see 
+   concrete evidence that I'm improving."
+   
+   Metrics Tracked:
+   - Overall emotional baseline (trending up/down)
+   - Volatility reduction (emotional stability improving)
+   - Good-day frequency (% of days rated above baseline)
+   - Recovery time (how fast you bounce back from lows)
+   - Trigger resilience (same trigger, but less impact over time)
+   - Relationship quality improvements
+   
+   Visualizations:
+   - Progress ring (overall recovery %: 0-100)
+   - Weekly mood distribution (box plot)
+   - Recovery time reduction graph
+   - Stability improvement chart
+   - Milestone celebrations (first trigger-free week, etc.)
+   - Goal tracking (user-set wellness goals)
+   
+   Wellness Goals:
+   - "Reduce anxiety around performance reviews"
+   - "Rebuild trust with sister"
+   - "Achieve 3 consecutive good days"
+   - "Keep emotional volatility under 0.5"
+   - Progress tracking with timeline
+   - Smart recommendations to achieve goals
+
+
+TIER 2: ENHANCED FEATURES
+─────────────────────────────────────────────────────────────────────────
+
+6. SMART JOURNAL SUGGESTIONS
+   - "How are you feeling today?" prompt (contextual to history)
+   - Suggested reflection questions (based on past patterns)
+   - "It's been a week since you mentioned work stress—how's it now?"
+   - Gentle nudges (compassionate, not pushy)
+   - Coping strategy suggestions (from policy system)
+
+
+7. PATTERN DISCOVERY ENGINE
+   - Auto-detect cyclical patterns (weekly, monthly, seasonal)
+   - Identify compound triggers
+   - Discover unexpected correlations
+   - Generate actionable insights
+   - Notify user of significant changes
+
+
+8. SAFE ESCALATION SYSTEM
+   - Monitor for crisis indicators:
+     * Sustained low mood (multiple days)
+     * Isolation mentions increasing
+     * Sleep/appetite disruptions
+     * Hopelessness language detection
+   - Gentle, compassionate escalation:
+     * In-app resources (crisis lines, therapy referrals)
+     * Optional daily check-ins
+     * Safety plan prompt
+   - Never forced or alarming—user agency first
+
+
+9. SOCIAL FEATURES (Optional)
+   - Share insights with therapist/counselor (read-only)
+   - Privacy-preserving support group (anonymous themes)
+   - Peer support (optional, moderated)
+   - Share recovery milestones with trusted contacts
+
+
+TIER 3: ADVANCED FEATURES
+─────────────────────────────────────────────────────────────────────────
+
+10. PERSONALIZED INTERVENTION RECOMMENDATIONS
+    - Policy-based suggestions (Emily response policies)
+    - "When you feel this way, try: [reflection, validation, gentle_question]"
+    - Evidence-based coping strategies
+    - Therapy modalities suggested based on pattern
+
+
+11. EXPORT & THERAPIST INTEGRATION
+    - Generate PDF reports for therapy sessions
+    - Share timeline charts with counselor
+    - API for EHR integration (HIPAA-compliant)
+
+
+12. RELAPSE PREVENTION TOOLKIT
+    - Identify early warning signs (from your patterns)
+    - Custom relapse prevention plans
+    - Trigger management strategies
+    - Emergency contact list
+
+
+================================================================================
+TECHNICAL IMPLEMENTATION DETAILS
+================================================================================
+
+FRONTEND ARCHITECTURE:
+─────────────────────────────────────────────────────────────────────────
+
+Pages/Routes:
+  / → Dashboard (recovery progress, recent insights)
+  /journal → New entry + journal list
+  /timeline → Emotional timeline visualization
+  /triggers → Trigger mapping & analysis
+  /relationships → Relationship emotional analyzer
+  /goals → Recovery goals & milestones
+  /insights → Pattern discoveries & recommendations
+  /settings → Privacy, notifications, therapy integration
+  /resources → Crisis resources, coping strategies
+
+Component Structure:
+  components/
+    ├── JournalEditor/
+    │   ├── RichTextEditor
+    │   ├── MoodSelector
+    │   ├── EmotionStateIndicator
+    │   └── AutoSave
+    ├── Visualizations/
+    │   ├── EmotionalTimeline
+    │   ├── TriggerHeatmap
+    │   ├── RelationshipTimeline
+    │   ├── ProgressRings
+    │   └── TrendCharts
+    ├── Cards/
+    │   ├── InsightCard
+    │   ├── TriggerCard
+    │   ├── RelationshipCard
+    │   └── GoalCard
+    ├── Layout/
+    │   ├── Header
+    │   ├── Sidebar
+    │   ├── Footer
+    │   └── ThemeProvider (light/dark, accessible)
+    └── Common/
+        ├── Modal
+        ├── Toast (notifications)
+        ├── Button
+        └── AccessibilityWidget
+
+State Management (Zustand):
+  stores/
+    ├── userStore (auth, profile, preferences)
+    ├── journalStore (entries, drafts)
+    ├── emotionalStore (emotions, triggers, relationships)
+    ├── uiStore (modals, notifications, theme)
+    └── analyticsStore (cached insights, trends)
+
+Hooks:
+  ├── useEmotionalTimeline() → fetch + format timeline data
+  ├── useTriggerAnalysis() → extract & rank triggers
+  ├── useRelationshipInsights() → generate relationship analytics
+  ├── useRecoveryProgress() → calculate wellness metrics
+  └── useEmilyIntegration() → call Emily API for analysis
+
+
+BACKEND ARCHITECTURE:
+─────────────────────────────────────────────────────────────────────────
+
+API Endpoints:
+
+Authentication:
+  POST   /api/auth/register
+  POST   /api/auth/login
+  POST   /api/auth/refresh
+  POST   /api/auth/logout
+  POST   /api/auth/password-reset
+
+Journal Management:
+  GET    /api/journals              (list with pagination, filters)
+  POST   /api/journals              (create entry)
+  GET    /api/journals/:id          (get single entry)
+  PUT    /api/journals/:id          (update entry)
+  DELETE /api/journals/:id          (soft delete)
+
+Emotional Analysis:
+  GET    /api/emotions/timeline     (temporal emotion data)
+  GET    /api/emotions/stats        (aggregated stats)
+  POST   /api/emotions/analyze      (run Emily on text)
+
+Triggers:
+  GET    /api/triggers              (user's triggers)
+  GET    /api/triggers/heatmap      (frequency × impact)
+  GET    /api/triggers/:id/recovery-time
+  POST   /api/triggers/:id/track-mitigation
+
+Relationships:
+  GET    /api/relationships         (list)
+  GET    /api/relationships/:id/timeline
+  GET    /api/relationships/:id/sentiment
+  GET    /api/relationships/analysis (cross-rel insights)
+
+Goals:
+  GET    /api/goals                 (user's goals)
+  POST   /api/goals                 (create)
+  PUT    /api/goals/:id/progress    (update progress)
+  GET    /api/goals/:id/analytics
+
+Insights:
+  GET    /api/insights/recommendations
+  GET    /api/insights/patterns
+  GET    /api/insights/anomalies
+
+Resources (Public):
+  GET    /api/resources/crisis-lines
+  GET    /api/resources/coping-strategies
+  GET    /api/resources/therapy-finder
+
+Database Schema:
+  
+  users
+    ├── id (UUID)
+    ├── email (unique)
+    ├── password_hash
+    ├── name
+    ├── therapy_mode (boolean: are they in active therapy?)
+    ├── created_at, updated_at
+    └── settings (JSON: privacy, notification preferences)
+  
+  journal_entries
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── timestamp
+    ├── raw_text
+    ├── emotion_state (JSON: valence, activation, stability)
+    ├── themes (JSON array: extracted themes)
+    ├── triggers (JSON array: extracted triggers)
+    ├── relationships_mentioned (JSON array: people)
+    ├── ai_summary (auto-generated)
+    ├── ai_confidence (0-1)
+    ├── is_private (boolean)
+    ├── created_at, updated_at
+    └── deleted_at (soft delete)
+  
+  emotional_memories
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── journal_entry_id (FK)
+    ├── summary (extracted emotional core)
+    ├── embedding (vector: 32-dim)
+    ├── themes (array)
+    ├── triggers (array)
+    ├── recency_weight (float)
+    ├── created_at
+    └── expires_at (optional: memory fading)
+  
+  triggers
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── trigger_text (e.g., "work meetings")
+    ├── category (work, relationship, health, etc.)
+    ├── confidence (0-1: extraction confidence)
+    ├── frequency_count
+    ├── avg_emotional_impact (0-1)
+    ├── recovery_time_avg (minutes)
+    ├── is_confirmed (user validated)
+    ├── created_at, updated_at
+    └── is_active (user tracking?)
+  
+  relationships
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── person_name
+    ├── relationship_type (friend, family, partner, coworker, etc.)
+    ├── mentioned_count
+    ├── sentiment_recent (positive/negative/neutral)
+    ├── trust_score (0-1: derived from entries)
+    ├── emotional_impact_score (how much they affect mood)
+    ├── created_at, updated_at
+    └── last_mentioned
+  
+  recovery_goals
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── goal_text
+    ├── goal_type (reduce_trigger, rebuild_relationship, improve_stability, etc.)
+    ├── target_date
+    ├── progress_percent
+    ├── milestones (JSON array with dates)
+    ├── created_at, updated_at
+    └── completed_at
+  
+  insights
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── insight_type (pattern, trigger_correlation, relationship_evolution, recovery_progress)
+    ├── title
+    ├── description
+    ├── confidence (0-1)
+    ├── supporting_data (JSON)
+    ├── actionable_recommendation
+    ├── created_at
+    └── dismissed_at (user dismissed insight)
+  
+  escalation_events
+    ├── id (UUID)
+    ├── user_id (FK)
+    ├── event_type (low_mood_sustained, isolation_increase, crisis_indicators)
+    ├── severity (low, medium, high, critical)
+    ├── triggered_at
+    ├── acknowledged_at
+    ├── action_taken
+    ├── resource_provided
+    └── is_resolved
+
+Emily Integration:
+  
+  Wrapper Service: emily_service.py / emilyService.ts
+  
+  Key Functions:
+    - analyze_emotion(text) → EmotionState
+    - extract_triggers(text) → [Trigger]
+    - extract_relationships(text) → [RelationshipMention]
+    - generate_summary(text) → str
+    - suggest_intervention(emotion_state, history) → Recommendation
+    - safety_check(response) → SafeResponse
+  
+  Configuration:
+    - Ollama endpoint (local or remote)
+    - Model selection (Mistral, etc.)
+    - Policy selection (which response policies active)
+    - Safety constraints
+
+
+BACKGROUND JOBS (Job Queue):
+  
+  Tasks:
+    - daily_insight_generation (every 24 hours per user)
+    - weekly_pattern_analysis (every week)
+    - trigger_escalation_check (every 12 hours)
+    - relationship_evolution_update (weekly)
+    - recovery_progress_calculation (daily)
+    - old_entry_fading (emotional memory decay)
+
+
+SECURITY & PRIVACY:
+  
+  ✓ End-to-end encryption (optional user setting)
+  ✓ Zero-knowledge where possible (server doesn't see raw content)
+  ✓ HIPAA-ready architecture (audit logging, consent tracking)
+  ✓ GDPR compliance (data export, right to delete)
+  ✓ Rate limiting (prevent abuse)
+  ✓ Input sanitization (XSS protection)
+  ✓ JWT token rotation
+  ✓ Password hashing (bcrypt)
+  ✓ Content moderation (detect harm patterns)
+  ✓ Therapist/emergency contact verification
+
+
+================================================================================
+DEVELOPMENT ROADMAP
+================================================================================
+
+PHASE 1: MVP (Weeks 1-6)
+  - User auth system
+  - Journal entry + emotion analysis (Emily integration)
+  - Basic emotional timeline visualization
+  - Simple trigger extraction
+  - Recovery progress dashboard (basic metrics)
+  - Deployment (staging)
+  - Beta user testing with therapists/counselors
+
+PHASE 2: Tier 2 Features (Weeks 7-12)
+  - Trigger mapping dashboard (heatmap)
+  - Relationship analyzer
+  - Pattern discovery
+  - Safe escalation system
+  - Journal suggestions
+  - Email notifications
+
+PHASE 3: Tier 3 & Polish (Weeks 13-16)
+  - Intervention recommendations
+  - Therapist integration
+  - Mobile-responsive optimization
+  - Accessibility audit (WCAG 2.1 AA)
+  - Performance optimization
+  - Public launch
+
+PHASE 4: Post-Launch (Ongoing)
+  - Social features
+  - Advanced analytics
+  - Integrations (calendar, fitness apps, therapy platforms)
+  - ML-based improvements
+  - Research partnerships
+
+
+================================================================================
+KEY DESIGN PRINCIPLES
+================================================================================
+
+1. EMPATHY FIRST
+   - Never judgmental language
+   - Celebrate small wins
+   - Offer compassion, not criticism
+   - Agency always with user
+
+2. TRANSPARENCY
+   - Show why Emily flagged something
+   - Explain insights (not black-box AI)
+   - User can refine/correct AI interpretations
+   - Clear data usage policy
+
+3. SAFETY
+   - Crisis detection with escalation
+   - Resource provision (never just warning)
+   - Privacy by default
+   - Therapist-informed design
+
+4. ACCESSIBILITY
+   - WCAG 2.1 AA minimum
+   - Keyboard navigation
+   - Screen reader support
+   - High contrast options
+   - Simple language option
+
+5. PRIVACY
+   - User owns their data
+   - Minimal tracking
+   - Consent-based sharing
+   - Right to delete
+
+6. EVIDENCE-BASED
+   - Grounded in psychology research
+   - Patterns based on actual data
+   - Interventions from CBT/DBT/ACT
+   - Validated with therapists
+
+
+================================================================================
+SUCCESS METRICS
+================================================================================
+
+Business:
+  - User retention (% active 30 days, 90 days)
+  - Therapist adoption rate
+  - Feature usage (journal entry frequency, timeline views)
+  - NPS score (Net Promoter Score)
+
+Clinical:
+  - Recovery progress (users showing improvement in metrics)
+  - Crisis detection accuracy (sensitivity + specificity)
+  - Therapy collaboration effectiveness
+  - User-reported wellbeing improvement
+
+Technical:
+  - API response time (<200ms for insights)
+  - Timeline load time (<1s even with 1000+ entries)
+  - Uptime (99.9%)
+  - Error rate (<0.1%)
+
+
+================================================================================
+TECH STACK RECOMMENDATIONS
+================================================================================
+
+Frontend:
+  ✓ React 18 + TypeScript
+  ✓ Vite (fast build)
+  ✓ TailwindCSS + Emotion/Styled Components
+  ✓ Zustand (state)
+  ✓ React Query (server state)
+  ✓ Recharts (charting)
+  ✓ Framer Motion (animations)
+  ✓ Zod (validation)
+  ✓ React Hook Form (forms)
+
+Backend (Choose One):
+  Option A: Node.js
+    - Express or Fastify
+    - TypeORM or Prisma (ORM)
+    - Bull (job queue)
+    - Winston (logging)
+  
+  Option B: Python
+    - FastAPI
+    - SQLAlchemy (ORM)
+    - Celery (job queue)
+    - Pydantic (validation)
+
+Database:
+  - PostgreSQL (primary)
+  - Redis (caching + job queue)
+  - Vector DB (pgvector extension for embeddings)
+
+DevOps:
+  - Docker + Docker Compose
+  - GitHub Actions (CI/CD)
+  - Vercel/Netlify (frontend) OR
+  - Railway/Render/DigitalOcean (backend)
+
+Monitoring:
+  - Sentry (error tracking)
+  - LogRocket (frontend monitoring)
+  - DataDog or New Relic (APM)
+
+
+================================================================================
+FINAL NOTES
+================================================================================
+
+This is a O-grade, production-ready architecture for ECHO (Emotional Chronicle Helping observations).
+
+Key Differentiators:
+  1. Combines therapy-informed design with Emily's emotive intelligence
+  2. Focuses on USER AGENCY (not replacing therapists)
+  3. Transparent, explainable AI (vs. black-box models)
+  4. Longitudinal insights (how you're evolving, not just today's mood)
+  5. Relationship & trigger analytics (deeper than generic mood tracking)
+  6. Safety-first escalation (crisis detection with compassion)
+  7. Privacy-native architecture (user data is sacred)
+
+Next Steps:
+  - Validate with target users (therapy community)
+  - Start with MVP (journal + timeline + triggers)
+  - Integrate Emily API early
+  - Get therapist feedback loops
+  - Launch beta with mental health professionals
+
+================================================================================
+BUILD PROMPTS FOR EACH TIER:
+================================================================================
+
+Want detailed implementation prompts for specific features? Request:
+  - "Give me the React component prompt for EmotionalTimeline"
+  - "Give me the API endpoint prompt for /api/triggers/heatmap"
+  - "Give me the Emily integration prompt for trigger extraction"
+  - "Give me the database schema migration prompt"
+
+================================================================================
+Project Tracking: ECHO (Emotional Chronicle Helping observations)_website
+Created: 2026-04-06
+Last Updated: 2026-04-06
+================================================================================
+
+/resume f9a1d8c1-d009-43eb-a9d8-d877c37afde1  
