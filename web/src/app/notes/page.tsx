@@ -68,7 +68,7 @@ export default function NotesPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10 lg:mb-14"
       >
-        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-glow-cyan">
+        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-neon-cyan">
           NOTES VAULT
         </h1>
         <p className="font-mono text-text-muted text-sm tracking-wider uppercase">
@@ -121,7 +121,6 @@ export default function NotesPage() {
                         size="sm"
                         onClick={() => void removeDraft(draft.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        icon="✕"
                       >
                         Delete
                       </Button>
@@ -196,14 +195,14 @@ export default function NotesPage() {
                     <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle/50 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity">
                       {editingEntryId === entry.id ? (
                         <>
-                          <Button variant="ghost" size="sm" onClick={() => setEditingEntryId(null)}>Cancel</Button>
+                          <Button variant="secondary" size="sm" onClick={() => setEditingEntryId(null)}>Cancel</Button>
                           <Button variant="accent" size="sm" onClick={() => void saveEditEntry(entry)}>Save Save</Button>
                         </>
                       ) : (
-                        <Button variant="secondary" size="sm" onClick={() => startEditEntry(entry)} icon="✎">Edit</Button>
+                        <Button variant="secondary" size="sm" onClick={() => startEditEntry(entry)}>Edit</Button>
                       )}
                       
-                      <Button variant="danger" size="sm" onClick={() => void removeEntry(entry.id)} icon="✕">Delete</Button>
+                      <Button variant="danger" size="sm" onClick={() => void removeEntry(entry.id)}>Delete</Button>
                     </div>
                   </motion.div>
                 ))}

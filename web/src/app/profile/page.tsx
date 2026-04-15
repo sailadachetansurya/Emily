@@ -44,7 +44,7 @@ export default function ProfilePage() {
     <main className="p-4 md:p-8 lg:p-12 max-w-[1200px] mx-auto bg-bg-primary">
       <header className="mb-12 flex flex-col md:flex-row justify-between items-end gap-6 border-b-4 border-white pb-6">
         <div>
-          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-glow-pink">
+          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-neon-pink">
             USER_IDENTITY <span className="text-neon-pink text-xs relative top-[-20px] bg-neon-pink/20 px-2 py-1">V_1.0</span>
           </h1>
           <p className="hud-text">

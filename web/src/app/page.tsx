@@ -118,8 +118,7 @@ export default function Home() {
       <BentoGrid>
         
         {/* INPUT TERMINAL */}
-        <BentoItem span={2}>
-          <Card label="EMOTIVE_INPUT_BUFFER" accent="violet">
+        <BentoItem span={2} label="EMOTIVE_INPUT_BUFFER" accent="violet">
             <div className="flex flex-col h-full">
               <textarea
                 value={journalEntry}
@@ -150,12 +149,10 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-          </Card>
         </BentoItem>
 
         {/* EMILY RESPONSE LOG */}
-        <BentoItem span={2}>
-          <Card label="EMILY_NEURAL_LOG" accent="green">
+        <BentoItem span={2} label="EMILY_NEURAL_LOG" accent="green">
              {!emilyResponse ? (
                <div className="flex flex-col items-center justify-center h-48 border-4 border-dashed border-zinc-900">
                   <p className="hud-text text-zinc-800">AWAITING_INPUT_FOR_LOG_GENERATION</p>
@@ -191,12 +188,10 @@ export default function Home() {
                   )}
                </div>
              )}
-          </Card>
         </BentoItem>
 
         {/* MOOD MATRIX */}
-        <BentoItem span={1}>
-          <Card label="MOOD_MATRIX">
+        <BentoItem span={1} label="MOOD_MATRIX">
             <div className="grid grid-cols-2 gap-4">
               {["Anxious", "Sad", "Neutral", "Good", "Great"].map((m) => (
                 <button
@@ -217,12 +212,10 @@ export default function Home() {
                 </button>
               ))}
             </div>
-          </Card>
         </BentoItem>
 
         {/* TRIGGER DECODE */}
-        <BentoItem span={2}>
-           <Card label="TRIGGER_DECODE_MAP" accent="orange">
+        <BentoItem span={2} label="TRIGGER_DECODE_MAP" accent="orange">
               <div className="flex flex-wrap gap-4">
                 {triggerCounts.length === 0 ? (
                   <p className="hud-text p-10 w-full text-center">NO_TRIGGER_PATTERNS_DETECTED</p>
@@ -244,7 +237,6 @@ export default function Home() {
                   ))
                 )}
               </div>
-           </Card>
         </BentoItem>
 
         {/* SYSTEM STATS */}

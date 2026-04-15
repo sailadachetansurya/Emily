@@ -14,7 +14,7 @@ interface BentoItemProps {
   className?: string;
   span?: 1 | 2 | 3 | 4;
   accent?: "violet" | "green" | "orange" | "pink" | "cyan" | "none";
-  glow?: boolean;
+  label?: string;
 }
 
 export function BentoGrid({ children, className = "" }: BentoGridProps) {
@@ -41,7 +41,7 @@ export function BentoItem({
   className = "",
   span = 1,
   accent = "none",
-  glow = false,
+  label,
 }: BentoItemProps) {
   const spanClasses = {
     1: "col-span-1",
@@ -58,7 +58,7 @@ export function BentoItem({
       }}
       className={`${spanClasses[span]} ${className}`}
     >
-      <Card accent={accent} glow={glow} className="h-full flex flex-col">
+      <Card accent={accent} label={label} className="h-full flex flex-col">
         {children}
       </Card>
     </motion.div>

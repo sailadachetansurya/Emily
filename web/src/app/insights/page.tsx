@@ -50,7 +50,7 @@ export default function InsightsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10 lg:mb-14"
       >
-        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-glow-green">
+        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-neon-green">
           INSIGHTS LAB
         </h1>
         <p className="font-mono text-text-muted text-sm tracking-wider uppercase">
