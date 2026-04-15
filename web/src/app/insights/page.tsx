@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import Card from "@/components/Card";
-import Button from "@/components/Button";
-import { Input } from "@/components/Input";
-import { getEntries, getServerInsights, login, logout, me, register } from "@/lib/backend-api";
+import { getEntries, getServerInsights } from "@/lib/backend-api";
 import { JournalRecord, toMoodLabel } from "@/lib/user-data";
+import { useAuth } from "@/context/AuthContext";
 
 function triggerMap(entries: JournalRecord[]): Array<{ name: string; count: number }> {
   const counts = new Map<string, number>();
@@ -22,147 +21,148 @@ function triggerMap(entries: JournalRecord[]): Array<{ name: string; count: numb
 }
 
 export default function InsightsPage() {
-  const [authUser, setAuthUser] = useState<{ user_id: string; username: string } | null>(null);
-  const [usernameInput, setUsernameInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const { user } = useAuth();
   const [entries, setEntries] = useState<JournalRecord[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isHydrating, setIsHydrating] = useState(true);
-
+  
   const triggers = useMemo(() => triggerMap(entries), [entries]);
 
   const loadData = async () => {
-    const [nextEntries, nextInsights] = await Promise.all([getEntries(), getServerInsights()]);
-    setEntries(nextEntries);
-    setInsights(nextInsights);
-  };
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const user = await me();
-        setAuthUser(user);
-        setUsernameInput(user.username);
-        await loadData();
-      } catch {
-        setAuthUser(null);
-      } finally {
-        setIsHydrating(false);
-      }
-    };
-    void bootstrap();
-  }, []);
-
-  const handleAuth = async () => {
     try {
-      const user = isRegisterMode
-        ? await register(usernameInput.trim().toLowerCase(), passwordInput)
-        : await login(usernameInput.trim().toLowerCase(), passwordInput);
-      setAuthUser(user);
-      setPasswordInput("");
-      await loadData();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Auth failed");
+      const [nextEntries, nextInsights] = await Promise.all([getEntries(), getServerInsights()]);
+      setEntries(nextEntries);
+      setInsights(nextInsights);
+    } catch(err) {
+      console.error(err);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    setAuthUser(null);
-    setEntries([]);
-    setInsights([]);
-  };
+  useEffect(() => {
+    if (user) void loadData();
+  }, [user]);
 
-  if (isHydrating) {
-    return <main className="min-h-screen p-8 font-mono text-sm">Loading...</main>;
-  }
-
-  if (!authUser) {
-    return (
-      <main className="min-h-screen p-4 md:p-8 flex items-center justify-center">
-        <Card className="w-full max-w-xl p-8 border-electric-violet" variant="accent" accentColor="violet">
-          <h1 className="text-3xl font-display mb-2">Insights Lab</h1>
-          <Input label="Username" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
-          <div className="mt-3" />
-          <Input
-            label="Password"
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleAuth();
-            }}
-          />
-          <div className="mt-4 flex gap-3">
-            <Button onClick={() => void handleAuth()}>{isRegisterMode ? "Register" : "Login"}</Button>
-            <Button variant="secondary" onClick={() => setIsRegisterMode((v) => !v)}>
-              {isRegisterMode ? "Switch to Login" : "Switch to Register"}
-            </Button>
-          </div>
-          {error && <p className="mt-3 font-mono text-xs text-electric-orange">{error}</p>}
-        </Card>
-      </main>
-    );
-  }
+  if (!user) return null;
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
-      <header className="mb-8 flex flex-wrap gap-3 justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-display">Insights Lab</h1>
-          <p className="font-mono text-xs text-textMuted">User: {authUser.username}</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Link href="/" className="px-3 py-2 border-2 border-white rounded font-mono text-xs hover:bg-white hover:text-black transition-all">
-            Dashboard
-          </Link>
-          <Link href="/notes" className="px-3 py-2 border-2 border-electric-violet rounded font-mono text-xs text-electric-violet hover:bg-electric-violet hover:text-black transition-all">
-            Notes
-          </Link>
-          <Button variant="secondary" size="sm" onClick={() => void handleLogout()}>Logout</Button>
-        </div>
-      </header>
+    <main className="p-4 md:p-8 lg:p-12 max-w-[1200px] mx-auto">
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-10 lg:mb-14"
+      >
+        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-glow-green">
+          INSIGHTS LAB
+        </h1>
+        <p className="font-mono text-text-muted text-sm tracking-wider uppercase">
+          Behavioral signals and patterns
+        </p>
+      </motion.header>
 
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="p-6 border-electric-green xl:col-span-2" variant="accent" accentColor="green">
-          <h2 className="font-display text-lg mb-4">Behavior Signals</h2>
-          <div className="space-y-3">
-            {insights.length === 0 && <div className="font-mono text-xs text-textMuted">No insights yet.</div>}
-            {insights.map((insight) => (
-              <div key={insight} className="bg-surface border border-borderMuted rounded p-3 font-mono text-xs">
-                {insight}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Behavior Signals */}
+        <motion.div
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           transition={{ delay: 0.1 }}
+           className="lg:col-span-2"
+        >
+          <Card className="h-full flex flex-col" accent="green" glow>
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded bg-neon-green/10 border border-neon-green/30 flex items-center justify-center text-neon-green">
+                  ◉
+                </div>
+                <h2 className="font-display text-xl font-bold">Behavior Signals</h2>
               </div>
-            ))}
-          </div>
-        </Card>
 
-        <Card className="p-6 border-electric-orange" variant="accent" accentColor="orange">
-          <h2 className="font-display text-lg mb-4">Quick Metrics</h2>
-          <div className="space-y-2 font-mono text-sm">
-            <div className="flex justify-between"><span className="text-textMuted">Entries</span><span>{entries.length}</span></div>
-            <div className="flex justify-between"><span className="text-textMuted">Mood trend</span><span>{toMoodLabel(entries)}</span></div>
-            <div className="flex justify-between"><span className="text-textMuted">Trigger types</span><span>{triggers.length}</span></div>
-          </div>
-          <h3 className="font-display text-sm mt-6 mb-2">Top Triggers</h3>
-          <div className="space-y-2">
-            {triggers.length === 0 && <p className="font-mono text-xs text-textMuted">No trigger data.</p>}
-            {triggers.map((item) => (
-              <div key={item.name} className="flex justify-between font-mono text-xs border border-borderMuted rounded p-2">
-                <span>{item.name}</span>
-                <span className="text-electric-orange">{item.count}</span>
+              <div className="space-y-4">
+                {insights.length === 0 && (
+                  <div className="border border-dashed border-border-subtle rounded-brutal-sm p-6 text-center text-text-muted font-mono text-sm">
+                    No signals detected yet. Add more data.
+                  </div>
+                )}
+                {insights.map((insight, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.1 }}
+                    key={insight} 
+                    className="bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-5 font-mono text-sm flex gap-4 hover:border-neon-green transition-colors items-start"
+                  >
+                    <span className="text-neon-green text-lg shrink-0 mt-[-2px]">↳</span>
+                    <span className="text-text-primary leading-relaxed">{insight}</span>
+                  </motion.div>
+                ))}
               </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-      <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 md:hidden z-50 bg-card border-2 border-white rounded-xl shadow-hard-sm px-2 py-2 flex gap-2">
-        <Link href="/" className="px-3 py-2 font-mono text-xs border border-white rounded">Home</Link>
-        <Link href="/notes" className="px-3 py-2 font-mono text-xs border border-electric-violet text-electric-violet rounded">Notes</Link>
-        <Link href="/insights" className="px-3 py-2 font-mono text-xs border border-electric-green text-electric-green rounded">Info</Link>
-      </nav>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Quick Metrics & Top Triggers */}
+        <motion.div
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           transition={{ delay: 0.2 }}
+           className="flex flex-col gap-6"
+        >
+          {/* Metrics */}
+          <Card accent="cyan">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="w-8 h-8 rounded bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan">
+                   ◒
+                 </div>
+                 <h2 className="font-display text-xl font-bold">Metrics</h2>
+              </div>
+
+              <div className="space-y-3 font-mono text-sm">
+                <div className="flex justify-between items-center p-3 bg-bg-surface border border-border-subtle rounded-brutal-sm">
+                  <span className="text-text-secondary">Entries Analyzed</span>
+                  <span className="text-neon-cyan font-bold">{entries.length}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-bg-surface border border-border-subtle rounded-brutal-sm">
+                  <span className="text-text-secondary">Mood Trend</span>
+                  <span className="font-bold text-white uppercase">{toMoodLabel(entries)}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Triggers */}
+          <Card accent="orange" className="flex-1">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded bg-neon-orange/10 border border-neon-orange/30 flex items-center justify-center text-neon-orange">
+                  ◬
+                </div>
+                <h2 className="font-display text-xl font-bold">Top Triggers</h2>
+              </div>
+
+              <div className="space-y-3">
+                {triggers.length === 0 && (
+                  <p className="font-mono text-xs text-text-muted">No trigger data.</p>
+                )}
+                {triggers.map((item, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + idx * 0.1 }}
+                    key={item.name} 
+                    className="flex justify-between items-center font-mono text-sm border-2 border-border-subtle bg-bg-surface rounded-brutal-sm p-3 hover:border-neon-orange transition-colors"
+                  >
+                    <span className="uppercase font-semibold tracking-wider">{item.name}</span>
+                    <span className="text-neon-orange bg-neon-orange/10 px-2 py-0.5 rounded text-xs font-bold w-6 text-center">
+                      {item.count}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+      </div>
     </main>
   );
 }

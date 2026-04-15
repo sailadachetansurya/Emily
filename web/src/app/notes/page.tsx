@@ -1,77 +1,40 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-import { Input } from "@/components/Input";
 import {
   deleteEntry,
   deleteDraft,
   getDrafts,
   getEntries,
-  login,
-  logout,
-  me,
-  register,
   updateEntry,
 } from "@/lib/backend-api";
 import { DraftRecord, formatLocalDate, JournalRecord } from "@/lib/user-data";
+import { useAuth } from "@/context/AuthContext";
 
 export default function NotesPage() {
-  const [authUser, setAuthUser] = useState<{ user_id: string; username: string } | null>(null);
-  const [usernameInput, setUsernameInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const { user } = useAuth();
+  
   const [entries, setEntries] = useState<JournalRecord[]>([]);
   const [drafts, setDrafts] = useState<DraftRecord[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isHydrating, setIsHydrating] = useState(true);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editingEntryText, setEditingEntryText] = useState("");
 
   const loadData = async () => {
-    const [nextEntries, nextDrafts] = await Promise.all([getEntries(), getDrafts()]);
-    setEntries(nextEntries);
-    setDrafts(nextDrafts);
-  };
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const user = await me();
-        setAuthUser(user);
-        setUsernameInput(user.username);
-        await loadData();
-      } catch {
-        setAuthUser(null);
-      } finally {
-        setIsHydrating(false);
-      }
-    };
-    void bootstrap();
-  }, []);
-
-  const handleAuth = async () => {
     try {
-      const user = isRegisterMode
-        ? await register(usernameInput.trim().toLowerCase(), passwordInput)
-        : await login(usernameInput.trim().toLowerCase(), passwordInput);
-      setAuthUser(user);
-      setPasswordInput("");
-      await loadData();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Auth failed");
+      const [nextEntries, nextDrafts] = await Promise.all([getEntries(), getDrafts()]);
+      setEntries(nextEntries);
+      setDrafts(nextDrafts);
+    } catch(err) {
+      console.error(err);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    setAuthUser(null);
-    setEntries([]);
-    setDrafts([]);
-  };
+  useEffect(() => {
+    if (user) void loadData();
+  }, [user]);
 
   const removeDraft = async (draftId: string) => {
     await deleteDraft(draftId);
@@ -96,128 +59,159 @@ export default function NotesPage() {
     await loadData();
   };
 
-  if (isHydrating) {
-    return <main className="min-h-screen p-8 font-mono text-sm">Loading...</main>;
-  }
-
-  if (!authUser) {
-    return (
-      <main className="min-h-screen p-4 md:p-8 flex items-center justify-center">
-        <Card className="w-full max-w-xl p-8 border-electric-violet" variant="accent" accentColor="violet">
-          <h1 className="text-3xl font-display mb-2">Notes Vault</h1>
-          <Input label="Username" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
-          <div className="mt-3" />
-          <Input
-            label="Password"
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleAuth();
-            }}
-          />
-          <div className="mt-4 flex gap-3">
-            <Button onClick={() => void handleAuth()}>{isRegisterMode ? "Register" : "Login"}</Button>
-            <Button variant="secondary" onClick={() => setIsRegisterMode((v) => !v)}>
-              {isRegisterMode ? "Switch to Login" : "Switch to Register"}
-            </Button>
-          </div>
-          {error && <p className="mt-3 font-mono text-xs text-electric-orange">{error}</p>}
-        </Card>
-      </main>
-    );
-  }
+  if (!user) return null;
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
-      <header className="mb-8 flex flex-wrap gap-3 justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-display">Notes Vault</h1>
-          <p className="font-mono text-xs text-textMuted">User: {authUser.username}</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Link href="/" className="px-3 py-2 border-2 border-white rounded font-mono text-xs hover:bg-white hover:text-black transition-all">
-            Dashboard
-          </Link>
-          <Link href="/insights" className="px-3 py-2 border-2 border-electric-green rounded font-mono text-xs text-electric-green hover:bg-electric-green hover:text-black transition-all">
-            Insights
-          </Link>
-          <Button variant="secondary" size="sm" onClick={() => void handleLogout()}>Logout</Button>
-        </div>
-      </header>
+    <main className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto">
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-10 lg:mb-14"
+      >
+        <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-white mb-2 text-glow-cyan">
+          NOTES VAULT
+        </h1>
+        <p className="font-mono text-text-muted text-sm tracking-wider uppercase">
+          Your archived emotional records
+        </p>
+      </motion.header>
 
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card className="p-6 border-electric-cyan" variant="accent" accentColor="cyan">
-          <h2 className="font-display text-lg mb-4">Drafts ({drafts.length})</h2>
-          <div className="space-y-3 max-h-[65vh] overflow-auto pr-2">
-            {drafts.length === 0 && <p className="font-mono text-xs text-textMuted">No drafts yet.</p>}
-            {drafts.map((draft) => (
-              <div key={draft.id} className="bg-surface border border-borderMuted rounded p-3">
-                <p className="font-mono text-sm whitespace-pre-wrap">{draft.text}</p>
-                <div className="mt-2 flex justify-between items-center">
-                  <span className="font-mono text-xs text-textMuted">{formatLocalDate(draft.createdAt)}</span>
-                  <button
-                    onClick={() => void removeDraft(draft.id)}
-                    className="font-mono text-xs text-electric-orange border border-electric-orange rounded px-2 py-1 hover:bg-electric-orange hover:text-black transition-all"
-                  >
-                    Delete
-                  </button>
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Drafts Section */}
+        <motion.div
+           initial={{ opacity: 0, x: -20 }}
+           animate={{ opacity: 1, x: 0 }}
+           transition={{ delay: 0.1 }}
+        >
+          <Card className="h-full flex flex-col" accent="cyan" glow>
+            <div className="p-8 pb-4">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan">
+                  ⚑
                 </div>
+                <h2 className="font-display text-xl font-bold">Drafts ({drafts.length})</h2>
               </div>
-            ))}
-          </div>
-        </Card>
+            </div>
+            
+            <div className="flex-1 p-8 pt-0 overflow-y-auto max-h-[70vh] space-y-4">
+              {drafts.length === 0 && (
+                <div className="border-2 border-dashed border-border-subtle rounded-brutal-sm p-8 text-center text-text-muted font-mono text-sm">
+                  No drafts saved.
+                </div>
+              )}
+              <AnimatePresence>
+                {drafts.map((draft) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+                    key={draft.id} 
+                    className="bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-5 hover:border-border-hard transition-colors group"
+                  >
+                    <p className="font-mono text-sm text-text-primary whitespace-pre-wrap leading-relaxed mb-4">
+                      {draft.text}
+                    </p>
+                    <div className="flex justify-between items-center pt-4 border-t border-border-subtle/50">
+                      <span className="font-mono text-xs text-text-muted">
+                        {formatLocalDate(draft.createdAt)}
+                      </span>
+                      <Button 
+                        variant="danger" 
+                        size="sm"
+                        onClick={() => void removeDraft(draft.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        icon="✕"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </Card>
+        </motion.div>
 
-        <Card className="p-6 border-electric-violet" variant="accent" accentColor="violet">
-          <h2 className="font-display text-lg mb-4">Analyzed Notes ({entries.length})</h2>
-          <div className="space-y-3 max-h-[65vh] overflow-auto pr-2">
-            {entries.length === 0 && <p className="font-mono text-xs text-textMuted">No analyzed notes yet.</p>}
-            {entries.map((entry) => (
-              <div key={entry.id} className="bg-surface border border-borderMuted rounded p-3">
-                <p className="font-mono text-xs text-textMuted">{formatLocalDate(entry.createdAt)}</p>
-                {editingEntryId === entry.id ? (
-                  <textarea
-                    value={editingEntryText}
-                    onChange={(e) => setEditingEntryText(e.target.value)}
-                    className="w-full mt-2 h-24 bg-background border border-borderMuted rounded p-2 font-mono text-sm"
-                  />
-                ) : (
-                  <p className="font-mono text-sm mt-2 whitespace-pre-wrap">{entry.text}</p>
-                )}
-                <p className="font-mono text-xs mt-2 text-electric-green">Emily: {entry.responseText}</p>
-                <div className="mt-2 flex gap-2">
-                  {editingEntryId === entry.id ? (
-                    <button
-                      onClick={() => void saveEditEntry(entry)}
-                      className="font-mono text-xs text-electric-green border border-electric-green rounded px-2 py-1 hover:bg-electric-green hover:text-black transition-all"
-                    >
-                      Save
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => startEditEntry(entry)}
-                      className="font-mono text-xs text-electric-cyan border border-electric-cyan rounded px-2 py-1 hover:bg-electric-cyan hover:text-black transition-all"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  <button
-                    onClick={() => void removeEntry(entry.id)}
-                    className="font-mono text-xs text-electric-orange border border-electric-orange rounded px-2 py-1 hover:bg-electric-orange hover:text-black transition-all"
-                  >
-                    Delete
-                  </button>
+        {/* Analyzed Notes Section */}
+        <motion.div
+           initial={{ opacity: 0, x: 20 }}
+           animate={{ opacity: 1, x: 0 }}
+           transition={{ delay: 0.2 }}
+        >
+          <Card className="h-full flex flex-col" accent="violet" glow>
+            <div className="p-8 pb-4">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded bg-neon-violet/10 border border-neon-violet/30 flex items-center justify-center text-neon-violet">
+                  ◈
                 </div>
+                <h2 className="font-display text-xl font-bold">Analyzed Records ({entries.length})</h2>
               </div>
-            ))}
-          </div>
-        </Card>
+            </div>
+
+            <div className="flex-1 p-8 pt-0 overflow-y-auto max-h-[70vh] space-y-4">
+              {entries.length === 0 && (
+                 <div className="border-2 border-dashed border-border-subtle rounded-brutal-sm p-8 text-center text-text-muted font-mono text-sm">
+                   No analyzed entries yet.
+                 </div>
+              )}
+              <AnimatePresence>
+                {entries.map((entry) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+                    key={entry.id} 
+                    className="bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-5 hover:border-border-hard transition-colors group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="font-mono text-xs text-text-muted">
+                        {formatLocalDate(entry.createdAt)}
+                      </span>
+                      {entry.mood && (
+                        <span className="neon-badge neon-badge-violet text-[10px] px-2 py-0.5">
+                          {entry.mood}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {editingEntryId === entry.id ? (
+                      <textarea
+                        value={editingEntryText}
+                        onChange={(e) => setEditingEntryText(e.target.value)}
+                        className="w-full h-32 bg-bg-card border-2 border-neon-cyan rounded-brutal-sm p-4 font-mono text-sm text-text-primary focus:outline-none mb-4 resize-none"
+                      />
+                    ) : (
+                      <p className="font-mono text-sm text-text-primary whitespace-pre-wrap leading-relaxed mb-4">
+                        {entry.text}
+                      </p>
+                    )}
+
+                    <div className="bg-neon-green/5 border border-neon-green/20 rounded p-4 mb-4">
+                      <p className="font-mono text-xs text-neon-green font-bold mb-1">Emily's Analysis</p>
+                      <p className="font-mono text-xs text-text-primary leading-relaxed">{entry.responseText}</p>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle/50 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity">
+                      {editingEntryId === entry.id ? (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => setEditingEntryId(null)}>Cancel</Button>
+                          <Button variant="accent" size="sm" onClick={() => void saveEditEntry(entry)}>Save Save</Button>
+                        </>
+                      ) : (
+                        <Button variant="secondary" size="sm" onClick={() => startEditEntry(entry)} icon="✎">Edit</Button>
+                      )}
+                      
+                      <Button variant="danger" size="sm" onClick={() => void removeEntry(entry.id)} icon="✕">Delete</Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </Card>
+        </motion.div>
       </section>
-      <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 md:hidden z-50 bg-card border-2 border-white rounded-xl shadow-hard-sm px-2 py-2 flex gap-2">
-        <Link href="/" className="px-3 py-2 font-mono text-xs border border-white rounded">Home</Link>
-        <Link href="/notes" className="px-3 py-2 font-mono text-xs border border-electric-violet text-electric-violet rounded">Notes</Link>
-        <Link href="/insights" className="px-3 py-2 font-mono text-xs border border-electric-green text-electric-green rounded">Info</Link>
-      </nav>
     </main>
   );
 }

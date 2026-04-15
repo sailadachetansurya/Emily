@@ -5,16 +5,17 @@ import { forwardRef, InputHTMLAttributes, useState } from "react";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  hint?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = "", ...props }, ref) => {
+  ({ label, error, hint, className = "", ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
 
     return (
       <div className="w-full">
         {label && (
-          <label className="block font-display text-xs uppercase tracking-wider text-textMuted mb-2">
+          <label className="block font-display text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
             {label}
           </label>
         )}
@@ -23,24 +24,24 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`
-            w-full px-4 py-3
-            bg-surface border-2 rounded-md
-            font-mono text-sm
-            text-text placeholder:text-textMuted
-            transition-all duration-150 ease-snap
-            focus:outline-none
+            brutal-input
             ${isFocused
-              ? "border-electric-violet shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-              : "border-borderMuted"
+              ? "border-neon-violet shadow-[0_0_0_4px_rgba(139,92,246,0.12)]"
+              : "border-border-subtle"
             }
-            ${error ? "border-electric-orange" : ""}
+            ${error ? "!border-neon-orange !shadow-[0_0_0_4px_rgba(249,115,22,0.12)]" : ""}
             ${className}
           `}
           {...props}
         />
+        {hint && !error && (
+          <p className="mt-1.5 text-[11px] text-text-muted font-mono">
+            {hint}
+          </p>
+        )}
         {error && (
-          <p className="mt-1 text-xs text-electric-orange font-mono">
-            {error}
+          <p className="mt-1.5 text-[11px] text-neon-orange font-mono flex items-center gap-1">
+            <span>⚠</span> {error}
           </p>
         )}
       </div>

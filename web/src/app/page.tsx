@@ -2,37 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { BentoGrid, BentoItem } from "@/components/BentoGrid";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-import { Input } from "@/components/Input";
 import type { EmilyResponse, EmotionState } from "@/lib/emily-api";
 import {
   analyzeJournal,
-  confirmPasswordReset,
   getDrafts,
   getEntries,
   getServerInsights,
-  login,
-  logout,
-  me,
-  register,
-  requestPasswordReset,
   saveDraft,
 } from "@/lib/backend-api";
 import { buildInsights, formatLocalDate, JournalRecord, toMoodLabel } from "@/lib/user-data";
+import { useAuth } from "@/context/AuthContext";
 
 type AccentColor = "violet" | "green" | "orange" | "pink" | "cyan";
 
 export default function Home() {
-  const [authUser, setAuthUser] = useState<{ user_id: string; username: string } | null>(null);
-  const [usernameInput, setUsernameInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [isResetMode, setIsResetMode] = useState(false);
-  const [resetTokenInput, setResetTokenInput] = useState("");
-
+  const { user } = useAuth();
+  
   const [journalEntry, setJournalEntry] = useState("");
   const [mood, setMood] = useState<string | null>(null);
   const [entries, setEntries] = useState<JournalRecord[]>([]);
@@ -45,11 +34,6 @@ export default function Home() {
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isHydrating, setIsHydrating] = useState(true);
-
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, -120]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.4]);
 
   const moods = [
     { label: "Anxious", emoji: "😰" },
@@ -60,32 +44,29 @@ export default function Home() {
   ] as const;
 
   const loadServerData = async () => {
-    const [nextEntries, nextDrafts, insights] = await Promise.all([getEntries(), getDrafts(), getServerInsights()]);
-    setEntries(nextEntries);
-    setDraftCount(nextDrafts.length);
-    setServerInsights(insights);
+    try {
+      const [nextEntries, nextDrafts, insights] = await Promise.all([
+        getEntries(),
+        getDrafts(),
+        getServerInsights()
+      ]);
+      setEntries(nextEntries);
+      setDraftCount(nextDrafts.length);
+      setServerInsights(insights);
+    } catch (err) {
+      console.error("Failed to load server data:", err);
+    }
   };
 
   useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const user = await me();
-        setAuthUser(user);
-        setUsernameInput(user.username);
-        await loadServerData();
-      } catch {
-        setAuthUser(null);
-      } finally {
-        setIsHydrating(false);
-      }
-    };
-    void bootstrap();
-  }, []);
+    if (user) void loadServerData();
+  }, [user]);
 
   const triggerCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const entry of entries) {
       const text = entry.text.toLowerCase();
+      // simplified naive extraction for display
       for (const k of ["work", "social", "night", "money", "family", "friend"]) {
         if (text.includes(k)) counts.set(k, (counts.get(k) ?? 0) + 1);
       }
@@ -108,67 +89,17 @@ export default function Home() {
     emilyResponse?.traces.some((t) => t.stage_name === "fallback" || t.stage_name === "error") ||
     emilyResponse?.response.safety_notes.some((n) => n.toLowerCase().includes("fallback")) ||
     false;
-  const responseDotClass = {
-    violet: "text-electric-violet",
-    green: "text-electric-green",
-    orange: "text-electric-orange",
-    pink: "text-electric-pink",
-    cyan: "text-electric-cyan",
+
+  const responseTextGlowClass = {
+    violet: "text-glow-violet text-neon-violet",
+    green: "text-glow-green text-neon-green",
+    orange: "text-glow-orange text-neon-orange",
+    pink: "text-glow-pink text-neon-pink",
+    cyan: "text-glow-cyan text-neon-cyan",
   }[responseAccent];
 
-  const handleAuth = async () => {
-    if (!usernameInput.trim() || !passwordInput.trim()) return;
-    setError(null);
-    setStatusMessage("");
-    try {
-      const user = isRegisterMode
-        ? await register(usernameInput.trim().toLowerCase(), passwordInput)
-        : await login(usernameInput.trim().toLowerCase(), passwordInput);
-      setAuthUser(user);
-      setPasswordInput("");
-      await loadServerData();
-      setStatusMessage(isRegisterMode ? "Account created." : "Logged in.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Auth failed");
-    }
-  };
-
-  const handleResetRequest = async () => {
-    if (!usernameInput.trim()) return;
-    try {
-      const token = await requestPasswordReset(usernameInput.trim().toLowerCase());
-      setStatusMessage(token ? `Reset token: ${token}` : "If user exists, token generated.");
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset request failed");
-    }
-  };
-
-  const handleResetConfirm = async () => {
-    if (!resetTokenInput.trim() || !passwordInput.trim()) return;
-    try {
-      await confirmPasswordReset(resetTokenInput.trim(), passwordInput);
-      setStatusMessage("Password reset complete. Login now.");
-      setIsResetMode(false);
-      setResetTokenInput("");
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset confirm failed");
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    setAuthUser(null);
-    setEntries([]);
-    setDraftCount(0);
-    setServerInsights([]);
-    setStatusMessage("");
-    setError(null);
-  };
-
   const handleAnalyze = async () => {
-    if (!authUser || !journalEntry.trim()) return;
+    if (!user || !journalEntry.trim()) return;
     setIsLoading(true);
     setError(null);
     setStatusMessage("");
@@ -176,7 +107,7 @@ export default function Home() {
     try {
       const response = await analyzeJournal({
         request_id: `req-${Date.now()}`,
-        user_id: authUser.username,
+        user_id: user.username,
         user_input: journalEntry,
         trace_id: `trace-${Date.now()}`,
         metadata: { mood },
@@ -186,10 +117,11 @@ export default function Home() {
       setEmotionState((emotionTrace?.metadata?.emotion as EmotionState) ?? null);
       setJournalEntry("");
       await loadServerData();
+      
       setStatusMessage(
         response.traces.some((t) => t.stage_name === "fallback")
           ? "Analyzed with fallback mode."
-          : "Analyzed and auto-saved to server.",
+          : "Analyzed and auto-saved to server."
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analyze failed");
@@ -209,246 +141,281 @@ export default function Home() {
     }
   };
 
-  if (isHydrating) {
-    return <main className="min-h-screen p-8 font-mono text-sm">Loading...</main>;
-  }
-
-  if (!authUser) {
-    return (
-      <main className="min-h-screen p-4 md:p-8 flex items-center justify-center">
-        <Card className="w-full max-w-xl p-8 border-electric-violet" variant="accent" accentColor="violet">
-          <h1 className="text-3xl font-display mb-2">ECHO</h1>
-          <p className="font-mono text-textMuted text-xs mb-6">Emotional Chronicle Helping Observations</p>
-          <Input label="Username" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
-          <div className="mt-3" />
-          <Input
-            label="Password"
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleAuth();
-            }}
-          />
-          {isResetMode && (
-            <>
-              <div className="mt-3" />
-              <Input label="Reset token" value={resetTokenInput} onChange={(e) => setResetTokenInput(e.target.value)} />
-            </>
-          )}
-          <div className="mt-4 flex gap-3 flex-wrap">
-            {!isResetMode ? (
-              <Button onClick={() => void handleAuth()}>{isRegisterMode ? "Register" : "Login"}</Button>
-            ) : (
-              <Button onClick={() => void handleResetConfirm()}>Confirm Reset</Button>
-            )}
-            <Button variant="secondary" onClick={() => setIsRegisterMode((v) => !v)} disabled={isResetMode}>
-              {isRegisterMode ? "Switch to Login" : "Switch to Register"}
-            </Button>
-            <Button variant="secondary" onClick={() => setIsResetMode((v) => !v)}>
-              {isResetMode ? "Back Auth" : "Reset Password"}
-            </Button>
-            {isResetMode && (
-              <Button variant="accent" onClick={() => void handleResetRequest()}>
-                Get Token
-              </Button>
-            )}
-          </div>
-          {statusMessage && <p className="mt-3 font-mono text-xs text-electric-green">{statusMessage}</p>}
-          {error && <p className="mt-3 font-mono text-xs text-electric-orange">{error}</p>}
-        </Card>
-      </main>
-    );
-  }
+  if (!user) return null; // handled by AuthGate
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
-      <motion.header className="mb-8" style={{ y: heroY, opacity: heroOpacity }}>
-        <div className="flex flex-wrap gap-3 items-center justify-between">
+    <main className="p-4 md:p-8 lg:p-12 max-w-[1600px] mx-auto">
+      {/* Header */}
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-10 lg:mb-14"
+      >
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-display font-black text-white mb-2">
-              E<span className="text-electric-violet">C</span>H<span className="text-electric-green">O</span>
+            <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-white mb-2 text-glow-violet">
+              ECHO
             </h1>
-            <p className="font-mono text-textMuted text-sm">Emotional Chronicle Helping Observations</p>
+            <p className="font-mono text-text-muted text-sm tracking-wider uppercase">
+              Emotional Chronicle · Helping Observations
+            </p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Link href="/" className="px-3 py-2 border-2 border-white rounded font-mono text-xs hover:bg-white hover:text-black transition-all">
-              Dashboard
+          <div className="flex gap-3">
+            <Link href="/notes">
+              <Button variant="secondary" icon="✦">Vault</Button>
             </Link>
-            <Link href="/notes" className="px-3 py-2 border-2 border-electric-violet rounded font-mono text-xs text-electric-violet hover:bg-electric-violet hover:text-black transition-all">
-              Notes
+            <Link href="/insights">
+              <Button variant="accent" icon="◉">Insights</Button>
             </Link>
-            <Link href="/insights" className="px-3 py-2 border-2 border-electric-green rounded font-mono text-xs text-electric-green hover:bg-electric-green hover:text-black transition-all">
-              Insights
-            </Link>
-            <Button variant="secondary" size="sm" onClick={() => void handleLogout()}>Logout</Button>
           </div>
         </div>
-        <p className="mt-3 font-mono text-xs text-electric-cyan">User: {authUser.username}</p>
       </motion.header>
 
-      <BentoGrid className="mb-8">
-        <BentoItem span={2} variant="accent" accentColor="violet">
-          <div className="p-6">
-            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-              <span className="text-electric-violet">◈</span> New Entry
-            </h2>
+      {/* Main Grid */}
+      <BentoGrid className="mb-10">
+        
+        {/* Composer Card */}
+        <BentoItem span={2} accent="violet" glow>
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded bg-neon-violet/10 border border-neon-violet/30 flex items-center justify-center text-neon-violet">
+                ◈
+              </div>
+              <h2 className="font-display text-xl font-bold">New Entry</h2>
+            </div>
+            
             <textarea
               value={journalEntry}
               onChange={(e) => setJournalEntry(e.target.value)}
               placeholder="What's on your mind? Pour it out..."
-              className="w-full h-28 md:h-36 bg-surface border-2 border-borderMuted rounded-md p-3 md:p-4 font-mono text-sm text-text placeholder:text-textMuted focus:outline-none focus:border-electric-violet transition-all duration-150 resize-none"
+              className="flex-1 min-h-[140px] w-full bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-5 font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-neon-violet focus:shadow-[0_0_0_4px_rgba(139,92,246,0.12)] transition-all resize-none mb-6"
             />
-            <div className="mt-4 flex gap-3 flex-wrap">
-              <Button variant="primary" onClick={() => void handleAnalyze()} disabled={isLoading || !journalEntry.trim()}>
+            
+            <div className="flex flex-wrap items-center gap-4">
+              <Button 
+                variant="primary" 
+                onClick={() => void handleAnalyze()} 
+                disabled={isLoading || !journalEntry.trim()}
+                icon={isLoading ? "⟳" : "⚡"}
+              >
                 {isLoading ? "Analyzing..." : "Analyze + Save"}
               </Button>
-              <Button variant="secondary" onClick={() => void handleSaveDraft()} disabled={!journalEntry.trim()}>
+              <Button 
+                variant="secondary" 
+                onClick={() => void handleSaveDraft()} 
+                disabled={!journalEntry.trim()}
+                icon="⚑"
+              >
                 Save Draft
               </Button>
-              <Link href="/notes" className="px-4 py-3 border-2 border-electric-cyan rounded-md font-display text-xs uppercase tracking-wider text-electric-cyan hover:bg-electric-cyan hover:text-black transition-all">
-                Open Notes
-              </Link>
             </div>
-            {statusMessage && <p className="mt-2 font-mono text-xs text-electric-green">{statusMessage}</p>}
-            {error && <p className="mt-2 font-mono text-xs text-electric-orange">⚠ {error}</p>}
+            
+            {/* Feedback messages */}
+            {statusMessage && (
+              <motion.p initial={{opacity:0}} animate={{opacity:1}} className="mt-4 font-mono text-xs text-neon-green flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" /> {statusMessage}
+              </motion.p>
+            )}
+            {error && (
+              <motion.p initial={{opacity:0}} animate={{opacity:1}} className="mt-4 font-mono text-xs text-neon-orange flex items-center gap-2">
+                <span>⚠</span> {error}
+              </motion.p>
+            )}
           </div>
         </BentoItem>
 
+        {/* Emily's Response Card - Dynamic inclusion */}
         {emilyResponse && (
-          <BentoItem span={2} variant="accent" accentColor={responseAccent}>
-            <div className="p-6">
-              <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-                <span className={responseDotClass}>◈</span> Emily&apos;s Response
-              </h2>
-              <div className="bg-surface border border-borderMuted rounded p-4 font-mono text-sm text-text">
+          <BentoItem span={isFallbackResponse ? 1 : 2} accent={responseAccent} glow>
+            <div className="p-8 h-full flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`w-8 h-8 rounded bg-neon-${responseAccent}/10 border border-neon-${responseAccent}/30 flex items-center justify-center text-neon-${responseAccent} animate-glow-pulse`}>
+                  ◈
+                </div>
+                <h2 className="font-display text-xl font-bold">Emily</h2>
+              </div>
+              
+              <div className="flex-1 bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-5 font-mono text-sm text-text-primary shadow-inner-glow leading-relaxed">
                 {emilyResponse.response.text}
               </div>
-              {isFallbackResponse && (
-                <div className="mt-2 inline-block px-2 py-1 border border-electric-orange text-electric-orange font-mono text-xs rounded">
-                  FALLBACK MODE
-                </div>
-              )}
-              {emotionState && (
-                <div className="mt-3 flex flex-wrap gap-4 font-mono text-xs">
-                  <div>
-                    <span className="text-textMuted">Valence:</span>{" "}
-                    <span className={emotionState.emotional_valence < 0 ? "text-electric-orange" : "text-electric-green"}>
-                      {emotionState.emotional_valence.toFixed(2)}
+              
+              <div className="mt-6 flex flex-wrap gap-2">
+                {isFallbackResponse && (
+                  <span className="neon-badge neon-badge-orange">Fallback Mode</span>
+                )}
+                {emotionState && (
+                  <>
+                    <span className={`neon-badge neon-badge-${emotionState.emotional_valence < 0 ? 'orange' : 'green'}`}>
+                      Valence: {emotionState.emotional_valence.toFixed(2)}
                     </span>
-                  </div>
-                  <div>
-                    <span className="text-textMuted">Activation:</span>{" "}
-                    <span className="text-electric-violet">{emotionState.activation_level}</span>
-                  </div>
-                  <div>
-                    <span className="text-textMuted">Stability:</span>{" "}
-                    <span className="text-electric-pink">{emotionState.stability}</span>
-                  </div>
-                </div>
-              )}
+                    <span className="neon-badge neon-badge-violet">
+                      {emotionState.activation_level} activation
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </BentoItem>
         )}
 
+        {/* Mood Check */}
         <BentoItem span={1}>
-          <div className="p-6">
-            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-              <span className="text-electric-green">◈</span> Mood Check
-            </h2>
-            <div className="grid grid-cols-2 gap-2">
-              {moods.map((m) => (
-                <button
-                  key={m.label}
-                  onClick={() => setMood(m.label)}
-                  className={`p-3 rounded-md border-2 font-mono text-xs uppercase transition-all duration-150 ${
-                    mood === m.label ? "bg-white text-black border-white shadow-hard" : "bg-surface text-textMuted border-borderMuted hover:border-white"
-                  }`}
-                >
-                  <span className="text-xl block mb-1">{m.emoji}</span>
-                  {m.label}
-                </button>
-              ))}
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded bg-neon-green/10 border border-neon-green/30 flex items-center justify-center text-neon-green">
+                ◉
+              </div>
+              <h2 className="font-display text-xl font-bold">Mood</h2>
             </div>
-          </div>
-        </BentoItem>
-
-        <BentoItem span={1} variant="accent" accentColor="green">
-          <div className="p-6">
-            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-              <span className="text-electric-green">◈</span> Snapshot
-            </h2>
-            <div className="space-y-3 font-mono text-sm">
-              <div className="flex justify-between items-center"><span className="text-textMuted">Entries</span><span className="text-electric-green font-bold">{entries.length}</span></div>
-              <div className="flex justify-between items-center"><span className="text-textMuted">Drafts</span><span className="text-electric-cyan font-bold">{draftCount}</span></div>
-              <div className="flex justify-between items-center"><span className="text-textMuted">Avg Mood</span><span className="text-electric-violet font-bold">{toMoodLabel(entries)}</span></div>
-            </div>
-          </div>
-        </BentoItem>
-
-        <BentoItem span={2}>
-          <div className="p-6">
-            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-              <span className="text-electric-pink">◈</span> Live Insights
-            </h2>
-            <div className="space-y-3">
-              {insights.map((item) => (
-                <div key={item} className="bg-surface border border-borderMuted rounded p-3 font-mono text-xs">
-                  <span className="text-electric-pink">[INSIGHT]</span> {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </BentoItem>
-
-        <BentoItem span={2} variant="accent" accentColor="orange">
-          <div className="p-6">
-            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-              <span className="text-electric-orange">◈</span> Triggers
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {triggerCounts.length === 0 ? (
-                <span className="font-mono text-xs text-textMuted">No trigger data yet.</span>
-              ) : (
-                triggerCounts.map(([name, count]) => (
-                  <button
-                    key={name}
-                    onClick={() => setSelectedTrigger((prev) => (prev === name ? null : name))}
-                    className={`px-3 py-1 bg-surface border rounded-full font-mono text-xs ${
-                      selectedTrigger === name ? "border-white text-white" : "border-electric-orange text-electric-orange"
-                    }`}
+            
+            <div className="grid grid-cols-2 gap-3 flex-1">
+              {moods.map((m) => {
+                const isActive = mood === m.label;
+                return (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    key={m.label}
+                    onClick={() => setMood(m.label)}
+                    className={`
+                      flex flex-col items-center justify-center p-4 rounded-brutal-sm border-2 
+                      font-mono text-xs uppercase tracking-wider transition-all
+                      ${isActive 
+                        ? "bg-neon-green border-neon-green text-black shadow-brutal hover:shadow-brutal" 
+                        : "bg-bg-surface border-border-subtle text-text-secondary hover:border-border-hard hover:text-text-primary"
+                      }
+                    `}
                   >
-                    {name} ({count})
-                  </button>
-                ))
-              )}
+                    <span className="text-3xl mb-2 filter drop-shadow-sm">{m.emoji}</span>
+                    {m.label}
+                  </motion.button>
+                );
+              })}
             </div>
-            <p className="mt-4 font-mono text-xs text-textMuted">{selectedTrigger ? `Selected: ${selectedTrigger}` : "Tap trigger for quick focus."}</p>
           </div>
         </BentoItem>
+
+        {/* Stats Snapshot */}
+        <BentoItem span={1} accent="cyan">
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan">
+                ◒
+              </div>
+              <h2 className="font-display text-xl font-bold">Snapshot</h2>
+            </div>
+            
+            <div className="flex-1 flex flex-col justify-center space-y-4 font-mono">
+              <div className="flex justify-between items-center p-3 border-2 border-border-subtle rounded-brutal-sm bg-bg-surface hover:border-neon-cyan transition-colors">
+                <span className="text-text-secondary text-sm">Total Entries</span>
+                <span className="text-neon-cyan font-bold text-lg">{entries.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 border-2 border-border-subtle rounded-brutal-sm bg-bg-surface hover:border-neon-violet transition-colors">
+                <span className="text-text-secondary text-sm">Drafts</span>
+                <span className="text-neon-violet font-bold text-lg">{draftCount}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 border-2 border-border-subtle rounded-brutal-sm bg-bg-surface hover:border-neon-green transition-colors">
+                <span className="text-text-secondary text-sm">Avg Mood</span>
+                <span className="text-neon-green font-bold uppercase">{toMoodLabel(entries)}</span>
+              </div>
+            </div>
+          </div>
+        </BentoItem>
+
+        {/* Live Insights */}
+        <BentoItem span={2} accent="pink">
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded bg-neon-pink/10 border border-neon-pink/30 flex items-center justify-center text-neon-pink">
+                ✦
+              </div>
+              <h2 className="font-display text-xl font-bold">Live Insights</h2>
+            </div>
+            
+            <div className="flex-1 space-y-4">
+              {insights.map((item, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  key={item} 
+                  className="bg-bg-surface border-2 border-border-subtle rounded-brutal-sm p-4 font-mono text-sm flex gap-3 hover:border-neon-pink/50 transition-colors"
+                >
+                  <span className="text-neon-pink shrink-0">◇</span> 
+                  <span className="text-text-primary">{item}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </BentoItem>
+
+        {/* Triggers */}
+        <BentoItem span={triggerCounts.length === 0 ? 1 : 2} accent="orange">
+          <div className="p-8 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded bg-neon-orange/10 border border-neon-orange/30 flex items-center justify-center text-neon-orange">
+                ◬
+              </div>
+              <h2 className="font-display text-xl font-bold">Triggers</h2>
+            </div>
+            
+            {triggerCounts.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center border-2 border-dashed border-border-subtle rounded-brutal-sm font-mono text-sm text-text-muted p-6 text-center">
+                No trigger patterns identified yet. Keep journaling.
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col">
+                <div className="flex flex-wrap gap-3">
+                  {triggerCounts.map(([name, count]) => (
+                    <motion.button
+                      whileHover={{ y: -2 }}
+                      whileTap={{ y: 0 }}
+                      key={name}
+                      onClick={() => setSelectedTrigger((prev) => (prev === name ? null : name))}
+                      className={`
+                        px-4 py-2 rounded-brutal-sm border-2 font-mono text-xs uppercase tracking-wider transition-all
+                        ${selectedTrigger === name 
+                          ? "bg-neon-orange border-neon-orange text-black shadow-brutal-sm" 
+                          : "bg-bg-surface border-neon-orange/50 text-neon-orange hover:border-neon-orange"
+                        }
+                      `}
+                    >
+                      {name} <span className="opacity-70 ml-1 font-bold">({count})</span>
+                    </motion.button>
+                  ))}
+                </div>
+                {selectedTrigger && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-6 p-4 bg-neon-orange/10 border border-neon-orange/30 rounded-brutal-sm font-mono text-xs text-neon-orange"
+                  >
+                    Focusing on <strong className="uppercase">{selectedTrigger}</strong>. These entries have a higher emotional activation cost.
+                  </motion.div>
+                )}
+              </div>
+            )}
+          </div>
+        </BentoItem>
+
       </BentoGrid>
 
-      <Card className="p-8 border-electric-cyan" variant="accent" accentColor="cyan">
-        <div className="flex flex-wrap gap-4 items-center justify-between">
+      {/* Footer Banner */}
+      <Card className="p-8" accent="none">
+        <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
           <div>
-            <h2 className="font-display text-2xl mb-2">Server-backed notes active.</h2>
-            <p className="font-mono text-textMuted text-sm">Last entry: {entries[0] ? formatLocalDate(entries[0].createdAt) : "none"}</p>
+            <h2 className="font-display text-2xl font-bold mb-2">Your Emotional Data is Secured.</h2>
+            <p className="font-mono text-text-muted text-sm">
+              Last synchronization: {entries[0] ? formatLocalDate(entries[0].createdAt) : "never"}
+            </p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/notes" className="px-4 py-3 border-2 border-electric-violet rounded-md font-display text-xs uppercase tracking-wider text-electric-violet hover:bg-electric-violet hover:text-black transition-all">
-              Open Notes Vault
-            </Link>
-            <Link href="/insights" className="px-4 py-3 border-2 border-electric-green rounded-md font-display text-xs uppercase tracking-wider text-electric-green hover:bg-electric-green hover:text-black transition-all">
-              Open Insights Lab
+          <div className="flex flex-wrap gap-3">
+            <Link href="/notes">
+              <Button variant="secondary" icon="⚑">View All Notes</Button>
             </Link>
           </div>
         </div>
       </Card>
-      <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 md:hidden z-50 bg-card border-2 border-white rounded-xl shadow-hard-sm px-2 py-2 flex gap-2">
-        <Link href="/" className="px-3 py-2 font-mono text-xs border border-white rounded">Home</Link>
-        <Link href="/notes" className="px-3 py-2 font-mono text-xs border border-electric-violet text-electric-violet rounded">Notes</Link>
-        <Link href="/insights" className="px-3 py-2 font-mono text-xs border border-electric-green text-electric-green rounded">Info</Link>
-      </nav>
+      
     </main>
   );
 }
