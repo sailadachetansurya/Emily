@@ -78,6 +78,12 @@ def init_db() -> None:
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 );
 
+                CREATE TABLE IF NOT EXISTS profiles (
+                    user_id INTEGER PRIMARY KEY,
+                    about TEXT DEFAULT '',
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_entries_user_created
                 ON entries(user_id, created_at DESC);
 
@@ -96,6 +102,34 @@ def init_db() -> None:
                 CREATE INDEX IF NOT EXISTS idx_rate_limits_bucket_time
                 ON rate_limits(bucket_key, created_at_epoch);
                 """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def get_profile(user_id: int) -> dict[str, Any]:
+    conn = _ensure_conn()
+    try:
+        row = conn.execute("SELECT about FROM profiles WHERE user_id = ?", (user_id,)).fetchone()
+        if row is None:
+            return {"about": ""}
+        return {"about": row["about"]}
+    finally:
+        conn.close()
+
+
+def update_profile(user_id: int, about: str) -> None:
+    with _LOCK:
+        conn = _ensure_conn()
+        try:
+            conn.execute(
+                """
+                INSERT INTO profiles(user_id, about)
+                VALUES(?, ?)
+                ON CONFLICT(user_id) DO UPDATE SET about=excluded.about
+                """,
+                (user_id, about)
             )
             conn.commit()
         finally:

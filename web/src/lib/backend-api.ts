@@ -142,3 +142,14 @@ export async function updateEntry(entryId: string, text: string, mood: string | 
 export async function deleteEntry(entryId: string): Promise<void> {
   await request<{ ok: boolean }>(`/api/backend/data/entries/${entryId}`, { method: "DELETE" });
 }
+
+export async function getProfile(): Promise<{ about: string }> {
+  return request<{ about: string }>("/api/backend/profile");
+}
+
+export async function updateProfile(about: string): Promise<{ about: string }> {
+  return request<{ about: string }>("/api/backend/profile", {
+    method: "POST",
+    body: JSON.stringify({ about }),
+  });
+}

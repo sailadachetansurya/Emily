@@ -102,10 +102,14 @@ body {
   .text-neon-violet { color: var(--neon-violet); text-shadow: 0 0 15px var(--neon-violet); }
   .text-neon-green { color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green); }
   .text-neon-orange { color: var(--neon-orange); text-shadow: 0 0 15px var(--neon-orange); }
+  .text-neon-pink { color: #FF007F; text-shadow: 0 0 15px #FF007F; }
+  .text-neon-cyan { color: #00F3FF; text-shadow: 0 0 15px #00F3FF; }
 
   .bg-neon-violet { background-color: var(--neon-violet); }
   .bg-neon-green { background-color: var(--neon-green); }
   .bg-neon-orange { background-color: var(--neon-orange); }
+  .bg-neon-pink { background-color: #FF007F; }
+  .bg-neon-cyan { background-color: #00F3FF; }
 }
 
 /* ── Bento Spacing ── */

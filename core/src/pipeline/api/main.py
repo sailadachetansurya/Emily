@@ -32,6 +32,8 @@ from pipeline.api.persistence import (
     save_draft,
     save_entry,
     update_entry,
+    get_profile,
+    update_profile,
 )
 from pipeline.contracts.models import RequestEnvelope
 from pipeline.orchestrator.pipeline import EmotivePipeline
@@ -184,6 +186,13 @@ class EntryResponse(BaseModel):
 class EntryUpdateRequest(BaseModel):
     text: str = Field(min_length=1)
     mood: Optional[str] = None
+
+
+class ProfileRequest(BaseModel):
+    about: str = Field(max_length=4000)
+
+class ProfileResponse(BaseModel):
+    about: str
 
 
 @app.get("/")
@@ -413,6 +422,19 @@ async def get_user_insights(authorization: Optional[str] = Header(default=None))
     if top_trigger:
         insights.append(f"Most frequent theme: {top_trigger}.")
     return {"insights": insights}
+
+
+@app.get("/api/profile", response_model=ProfileResponse)
+async def get_user_profile(authorization: Optional[str] = Header(default=None)):
+    user = _require_user(authorization)
+    profile = get_profile(user["id"])
+    return ProfileResponse(about=profile["about"])
+
+@app.post("/api/profile", response_model=ProfileResponse)
+async def update_user_profile(request: ProfileRequest, authorization: Optional[str] = Header(default=None)):
+    user = _require_user(authorization)
+    update_profile(user["id"], request.about)
+    return ProfileResponse(about=request.about)
 
 
 @app.on_event("startup")

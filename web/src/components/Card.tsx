@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 interface CardProps {
   children: ReactNode;
   className?: string;
-  accent?: "violet" | "green" | "orange" | "none";
+  accent?: "violet" | "green" | "orange" | "pink" | "cyan" | "none";
   label?: string; // OS-style window label
   onClick?: () => void;
 }
@@ -22,6 +22,8 @@ export default function Card({
     violet: "card-violet",
     green: "card-green",
     orange: "card-orange",
+    pink: "border-[#FF007F]",
+    cyan: "border-[#00F3FF]",
     none: "border-white",
   };
 
@@ -29,6 +31,8 @@ export default function Card({
     violet: "bg-neon-violet",
     green: "bg-neon-green",
     orange: "bg-neon-orange",
+    pink: "bg-neon-pink",
+    cyan: "bg-neon-cyan",
     none: "bg-white",
   };
 

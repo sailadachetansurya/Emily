@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/", label: "DASHBOARD", icon: "◈", color: "neon-violet" },
   { href: "/notes", label: "VAULT", icon: "✦", color: "neon-cyan" },
   { href: "/insights", label: "NEURAL", icon: "◉", color: "neon-green" },
+  { href: "/profile", label: "USER", icon: "◬", color: "neon-pink" },
 ] as const;
 
 export default function Navbar() {
