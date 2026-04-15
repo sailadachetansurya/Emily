@@ -1,0 +1,36 @@
+services:
+  # ── ECHO Backend API (FastAPI) ──
+  - type: web
+    name: echo-backend
+    env: python
+    buildCommand: |
+        cd core 
+        pip install -r requirements.txt
+    startCommand: "cd core && uvicorn src.pipeline.api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ECHO_DB_PATH
+        value: "/data/echo_app.db"
+      - key: ECHO_ALLOWED_ORIGINS
+        value: "https://echo-app-front.netlify.app" # The user should change this to their actual Netlify URL
+      - key: PYTHONPATH
+        value: "src"
+    # Use a persistent disk to ensure SQLite database and local user records aren't reset
+    disk:
+      name: echo-data
+      mountPath: /data
+      sizeGB: 1
+    autoDeploy: true
+
+  # ── Optional: Render Native Static Deploy ──
+  # If you prefer keeping everything on Render over Netlify, uncomment below:
+  # - type: web
+  #   name: echo-frontend
+  #   env: static
+  #   buildCommand: "cd web && npm install && npm run build"
+  #   staticPublishPath: "./web/.next"
+  #   envVars:
+  #     - key: NEXT_PUBLIC_API_URL
+  #       fromService:
+  #         type: web
+  #         name: echo-backend
+  #         envVarKey: RENDER_EXTERNAL_URL
