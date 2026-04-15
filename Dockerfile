@@ -18,8 +18,8 @@ COPY core/ ./core/
 ENV PYTHONPATH="/app/core/src"
 ENV ECHO_DB_PATH="/data/echo_app.db"
 
-# Expose the API port
-EXPOSE 8000
+# Expose the API port (7860 is required for completely free Hugging Face Spaces)
+EXPOSE 7860
 
 # Start Uvicorn pointing to the main app inside core/src/pipeline/api/main.py
-CMD ["sh", "-c", "uvicorn pipeline.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn pipeline.api.main:app --host 0.0.0.0 --port ${PORT:-7860}"]
