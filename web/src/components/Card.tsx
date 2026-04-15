@@ -6,82 +6,61 @@ import { ReactNode } from "react";
 interface CardProps {
   children: ReactNode;
   className?: string;
-  accent?: "violet" | "green" | "orange" | "pink" | "cyan" | "none";
-  glow?: boolean;
+  accent?: "violet" | "green" | "orange" | "none";
+  label?: string; // OS-style window label
   onClick?: () => void;
-  // Backward compat
-  variant?: string;
-  accentColor?: string;
 }
-
-const accentBorderMap = {
-  violet: "border-neon-violet/40",
-  green: "border-neon-green/40",
-  orange: "border-neon-orange/40",
-  pink: "border-neon-pink/40",
-  cyan: "border-neon-cyan/40",
-  none: "border-border-subtle",
-} as const;
-
-const glowMap = {
-  violet: "hover:shadow-glow-violet",
-  green: "hover:shadow-glow-green",
-  orange: "hover:shadow-glow-orange",
-  pink: "hover:shadow-glow-violet",
-  cyan: "hover:shadow-glow-cyan",
-  none: "",
-} as const;
 
 export default function Card({
   children,
   className = "",
   accent = "none",
-  glow = false,
+  label,
   onClick,
-  variant,
-  accentColor,
 }: CardProps) {
-  // Support old API
-  const resolvedAccent = (accentColor as CardProps["accent"]) || accent;
+  const accentClasses = {
+    violet: "card-violet",
+    green: "card-green",
+    orange: "card-orange",
+    none: "border-white",
+  };
+
+  const headerBg = {
+    violet: "bg-neon-violet",
+    green: "bg-neon-green",
+    orange: "bg-neon-orange",
+    none: "bg-white",
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-      whileHover={{
-        x: -3,
-        y: -3,
-        boxShadow: "8px 8px 0px 0px #000000",
-        transition: { duration: 0.2 },
-      }}
-      whileTap={{
-        x: 3,
-        y: 3,
-        boxShadow: "0px 0px 0px 0px #000000",
-        transition: { duration: 0.1 },
-      }}
+    <div
       onClick={onClick}
       className={`
-        relative bg-bg-card/80 backdrop-blur-sm 
-        border-2 ${accentBorderMap[resolvedAccent]} 
-        rounded-brutal shadow-brutal-sm
-        transition-colors duration-200
-        ${glow ? glowMap[resolvedAccent] : ""}
+        brutal-card ${accentClasses[accent]}
+        flex flex-col
         ${onClick ? "cursor-pointer" : ""}
         ${className}
       `}
     >
-      {/* Top accent line */}
-      {resolvedAccent !== "none" && (
-        <div
-          className={`absolute top-0 left-4 right-4 h-[2px] rounded-full opacity-60`}
-          style={{
-            background: `var(--neon-${resolvedAccent})`,
-          }}
-        />
+      {/* OS Window Header */}
+      {label && (
+        <div className={`h-8 border-b-4 border-inherit ${headerBg[accent]} flex items-center px-4 justify-between`}>
+          <span className="font-display text-[10px] font-black text-black tracking-widest uppercase">
+            {label}
+          </span>
+          <div className="flex gap-1">
+            <div className="w-3 h-3 border-2 border-black" />
+            <div className="w-3 h-3 border-2 border-black bg-black" />
+          </div>
+        </div>
       )}
-      {children}
-    </motion.div>
+      
+      <div className="p-6 flex-1">
+        {children}
+      </div>
+      
+      {/* Decorative OS Corner */}
+      <div className="absolute bottom-1 right-1 w-3 h-3 bg-white" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} />
+    </div>
   );
 }

@@ -2,423 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Premium Font Stack ── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Base Palette */
-  --bg-primary: #050508;
-  --bg-surface: #0a0a0f;
-  --bg-card: #111118;
-  --bg-elevated: #18181f;
-
-  /* Neon Accents — "The Neon Remedy" */
-  --neon-violet: #8B5CF6;
-  --neon-green: #A3E635;
-  --neon-orange: #F97316;
-  --neon-pink: #EC4899;
-  --neon-cyan: #06B6D4;
-  --neon-yellow: #FACC15;
-
-  /* Text */
-  --text-primary: #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-muted: #52525B;
-
-  /* Borders */
-  --border-hard: #FFFFFF;
-  --border-subtle: #27272A;
-  --border-glow: rgba(139, 92, 246, 0.4);
-
-  /* Shadows */
-  --shadow-brutal: 6px 6px 0px 0px #000000;
-  --shadow-brutal-sm: 4px 4px 0px 0px #000000;
-  --shadow-brutal-lg: 8px 8px 0px 0px #000000;
-  --shadow-brutal-active: 0px 0px 0px 0px #000000;
+  --neon-violet: #BC13FE;
+  --neon-green: #BFFF00;
+  --neon-orange: #FF6700;
+  --bg-pitch: #050505;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-html, body {
-  max-width: 100vw;
+body {
+  background-color: var(--bg-pitch);
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
   overflow-x: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
 }
 
-/* ── Selection ── */
-::selection {
-  background: var(--neon-violet);
-  color: #000000;
-}
-
-/* ── NEO-BRUTALISM BASE ── */
+/* ── Neubrutalist Base ── */
 @layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  h1 { font-size: 3rem; line-height: 1.1; }
-  h2 { font-size: 1.75rem; line-height: 1.2; }
-  h3 { font-size: 1.25rem; line-height: 1.3; }
-
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .font-display {
-    font-family: 'Space Grotesk', sans-serif;
-  }
-
-  .font-mono {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  h1, h2, h3 {
+    font-family: 'Orbitron', 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 }
 
-/* ── COMPONENT CLASSES ── */
 @layer components {
-  /* ── Brutal Card ── */
+  /* ── The OS-Style Card ── */
   .brutal-card {
-    background: var(--bg-card);
-    border: 2px solid var(--border-subtle);
-    border-radius: 16px;
-    box-shadow: var(--shadow-brutal-sm);
-    transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: #0A0A0A;
+    border: 4px solid #FFFFFF;
+    box-shadow: 10px 10px 0px 0px #000000;
+    transition: all 150ms step-end;
     position: relative;
-    overflow: hidden;
-  }
-
-  .brutal-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 300ms ease;
-    pointer-events: none;
-    background: linear-gradient(
-      135deg, 
-      rgba(139, 92, 246, 0.08) 0%,
-      transparent 50%,
-      rgba(163, 230, 53, 0.04) 100%
-    );
   }
 
   .brutal-card:hover {
     transform: translate(-3px, -3px);
-    box-shadow: var(--shadow-brutal);
-    border-color: var(--border-hard);
-  }
-
-  .brutal-card:hover::before {
-    opacity: 1;
+    box-shadow: 13px 13px 0px 0px #000000;
   }
 
   .brutal-card:active {
-    transform: translate(3px, 3px);
-    box-shadow: var(--shadow-brutal-active);
+    transform: translate(6px, 6px);
+    box-shadow: 4px 4px 0px 0px #000000;
   }
 
-  /* ── Brutal Button ── */
-  .brutal-btn {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 12px 24px;
-    border: 2px solid var(--border-hard);
-    border-radius: 12px;
-    box-shadow: var(--shadow-brutal-sm);
-    cursor: pointer;
-    transition: all 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
-    overflow: hidden;
-  }
+  /* Accent Borders for OS categorization */
+  .card-violet { border-color: var(--neon-violet); }
+  .card-green { border-color: var(--neon-green); }
+  .card-orange { border-color: var(--neon-orange); }
 
-  .brutal-btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: var(--shadow-brutal);
-  }
-
-  .brutal-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: var(--shadow-brutal-active);
-  }
-
-  .brutal-btn-primary {
-    background: var(--neon-violet);
-    color: #ffffff;
-  }
-
-  .brutal-btn-secondary {
-    background: transparent;
-    color: var(--text-primary);
-  }
-
-  .brutal-btn-secondary:hover {
-    background: var(--border-hard);
-    color: var(--bg-primary);
-  }
-
-  .brutal-btn-accent {
-    background: var(--neon-green);
-    color: #000000;
-    border-color: var(--neon-green);
-  }
-
-  .brutal-btn-danger {
-    background: var(--neon-orange);
-    color: #000000;
-    border-color: var(--neon-orange);
-  }
-
-  /* ── Brutal Input ── */
-  .brutal-input {
-    width: 100%;
-    padding: 14px 18px;
-    background: var(--bg-surface);
-    border: 2px solid var(--border-subtle);
-    border-radius: 12px;
+  /* ── Digital Readout / HUD elements ── */
+  .hud-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    color: var(--text-primary);
-    transition: all 200ms ease;
-    outline: none;
-  }
-
-  .brutal-input::placeholder {
-    color: var(--text-muted);
-  }
-
-  .brutal-input:focus {
-    border-color: var(--neon-violet);
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), 0 0 20px rgba(139, 92, 246, 0.1);
-  }
-
-  /* ── Neon Badge ── */
-  .neon-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    border: 1px solid;
+    color: rgba(255, 255, 255, 0.5);
   }
 
-  .neon-badge-violet {
-    color: var(--neon-violet);
-    border-color: rgba(139, 92, 246, 0.3);
-    background: rgba(139, 92, 246, 0.08);
-  }
-
-  .neon-badge-green {
+  .hud-value {
+    font-family: 'Orbitron', sans-serif;
     color: var(--neon-green);
-    border-color: rgba(163, 230, 53, 0.3);
-    background: rgba(163, 230, 53, 0.08);
+    text-shadow: 0 0 10px var(--neon-green);
   }
 
-  .neon-badge-orange {
-    color: var(--neon-orange);
-    border-color: rgba(249, 115, 22, 0.3);
-    background: rgba(249, 115, 22, 0.08);
-  }
-
-  .neon-badge-cyan {
-    color: var(--neon-cyan);
-    border-color: rgba(6, 182, 212, 0.3);
-    background: rgba(6, 182, 212, 0.08);
-  }
-
-  .neon-badge-pink {
-    color: var(--neon-pink);
-    border-color: rgba(236, 72, 153, 0.3);
-    background: rgba(236, 72, 153, 0.08);
-  }
-
-  /* ── Noise Texture Overlay ── */
-  .noise-overlay::after {
-    content: '';
+  /* ── OS Scanline & CRT FX ── */
+  .scanlines::after {
+    content: " ";
+    display: block;
     position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.015;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 128px;
-  }
-
-  /* ── Glow Border Wrapper ── */
-  .glow-border {
-    position: relative;
-  }
-
-  .glow-border::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 2px;
-    background: linear-gradient(135deg, var(--neon-violet), var(--neon-cyan), var(--neon-green));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 400ms ease;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 1000;
+    background-size: 100% 4px, 3px 100%;
     pointer-events: none;
   }
 
-  .glow-border:hover::before {
-    opacity: 1;
-  }
-
-  /* ── Scan Line Effect ── */
-  .scanlines::before {
-    content: '';
+  /* ── Digital Glitch Static ── */
+  .noise-overlay {
     position: fixed;
-    inset: 0;
-    z-index: 9998;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://grainy-gradients.vercel.app/noise.svg');
+    opacity: 0.05;
     pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.015) 2px,
-      rgba(0, 0, 0, 0.015) 4px
-    );
-  }
-
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--border-subtle);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+    z-index: 999;
   }
 }
 
-/* ── UTILITY CLASSES ── */
+/* ── Custom Utilities ── */
 @layer utilities {
-  .text-glow-violet {
-    text-shadow: 0 0 12px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.2);
-  }
+  .text-neon-violet { color: var(--neon-violet); text-shadow: 0 0 15px var(--neon-violet); }
+  .text-neon-green { color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green); }
+  .text-neon-orange { color: var(--neon-orange); text-shadow: 0 0 15px var(--neon-orange); }
 
-  .text-glow-green {
-    text-shadow: 0 0 12px rgba(163, 230, 53, 0.6), 0 0 40px rgba(163, 230, 53, 0.2);
-  }
+  .bg-neon-violet { background-color: var(--neon-violet); }
+  .bg-neon-green { background-color: var(--neon-green); }
+  .bg-neon-orange { background-color: var(--neon-orange); }
+}
 
-  .text-glow-orange {
-    text-shadow: 0 0 12px rgba(249, 115, 22, 0.6), 0 0 40px rgba(249, 115, 22, 0.2);
-  }
-
-  .text-glow-cyan {
-    text-shadow: 0 0 12px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.2);
-  }
-
-  .text-glow-pink {
-    text-shadow: 0 0 12px rgba(236, 72, 153, 0.6), 0 0 40px rgba(236, 72, 153, 0.2);
-  }
-
-  .border-glow-violet {
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.25), inset 0 0 15px rgba(139, 92, 246, 0.05);
-  }
-
-  .border-glow-green {
-    box-shadow: 0 0 15px rgba(163, 230, 53, 0.25), inset 0 0 15px rgba(163, 230, 53, 0.05);
-  }
-
-  .border-glow-orange {
-    box-shadow: 0 0 15px rgba(249, 115, 22, 0.25), inset 0 0 15px rgba(249, 115, 22, 0.05);
-  }
-
-  /* Gradient mesh backgrounds */
-  .mesh-gradient {
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(163, 230, 53, 0.04) 0%, transparent 50%);
-  }
-
-  /* Animated pulse ring */
-  .pulse-ring {
-    animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulseRing {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-    50% { box-shadow: 0 0 0 12px rgba(139, 92, 246, 0); }
-  }
-
-  /* Stagger animation helper */
-  .stagger-in {
-    animation: staggerFadeUp 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-
-  @keyframes staggerFadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Floating animation */
-  .float {
-    animation: floatSmooth 6s ease-in-out infinite;
-  }
-
-  @keyframes floatSmooth {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-
-  /* Shimmer loading */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--bg-card) 25%,
-      var(--bg-elevated) 50%,
-      var(--bg-card) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
+/* ── Bento Spacing ── */
+.bento-container {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
 }

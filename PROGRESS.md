@@ -154,13 +154,13 @@
 ### Start Emily Backend
 ```bash
 cd D:\dheer@j\Emily
-$env:PYTHONPATH="src"
-.venv\Scripts\python -m uvicorn pipeline.api.main:app --reload --reload-dir src --port 8000
+$env:PYTHONPATH="core/src"
+.venv\Scripts\python -m uvicorn pipeline.api.main:app --reload --reload-dir core/src --port 8000
 ```
 
 ### Start ECHO Frontend
 ```bash
-cd D:\dheer@j\Emily\ECHO_website
+cd D:\dheer@j\Emily\web
 npm run dev
 ```
 

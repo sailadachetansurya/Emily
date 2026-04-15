@@ -1,15 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
-import type { HTMLMotionProps } from "framer-motion";
+import { ReactNode, ButtonHTMLAttributes } from "react";
 
-interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "accent" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "accent" | "danger";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
-  icon?: ReactNode;
 }
 
 export default function Button({
@@ -17,55 +15,41 @@ export default function Button({
   variant = "primary",
   size = "md",
   fullWidth = false,
-  icon,
   className = "",
   disabled,
   ...props
 }: ButtonProps) {
   const variantClasses = {
-    primary: "bg-neon-violet text-white border-neon-violet/60 hover:bg-neon-violet/90",
-    secondary: "bg-bg-elevated text-text-primary border-border-subtle hover:bg-border-hard hover:text-bg-primary hover:border-border-hard",
-    accent: "bg-neon-green text-black border-neon-green hover:bg-neon-green/90",
-    danger: "bg-neon-orange text-black border-neon-orange hover:bg-neon-orange/90",
-    ghost: "bg-transparent text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-elevated shadow-none hover:shadow-none",
+    primary: "bg-white text-black border-white hover:bg-neon-violet hover:border-neon-violet hover:text-white",
+    secondary: "bg-transparent text-white border-white hover:bg-white hover:text-black",
+    accent: "bg-neon-green text-black border-neon-green hover:bg-white hover:border-white",
+    danger: "bg-neon-orange text-black border-neon-orange hover:bg-white hover:border-white",
   };
 
   const sizeClasses = {
-    sm: "px-3 py-1.5 text-[11px] rounded-lg",
-    md: "px-5 py-2.5 text-[13px] rounded-brutal-sm",
-    lg: "px-8 py-3.5 text-sm rounded-brutal",
+    sm: "px-4 py-2 text-[10px] border-3",
+    md: "px-6 py-3 text-xs border-4",
+    lg: "px-10 py-5 text-sm border-5",
   };
 
   return (
-    <motion.button
-      whileHover={disabled ? {} : {
-        x: -2,
-        y: -2,
-        boxShadow: "6px 6px 0px 0px #000000",
-        transition: { duration: 0.15 },
-      }}
-      whileTap={disabled ? {} : {
-        x: 2,
-        y: 2,
-        boxShadow: "0px 0px 0px 0px #000000",
-        transition: { duration: 0.08 },
-      }}
+    <button
       disabled={disabled}
       className={`
-        inline-flex items-center justify-center gap-2
-        font-display font-semibold uppercase tracking-wider
-        border-2 shadow-brutal-sm
-        transition-colors duration-150
+        font-display font-black uppercase tracking-widest
+        transition-all duration-75 active:translate-x-1 active:translate-y-1 active:shadow-none
+        shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]
+        inline-flex items-center justify-center
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${fullWidth ? "w-full" : ""}
-        ${disabled ? "opacity-40 cursor-not-allowed !shadow-none" : "cursor-pointer"}
+        ${disabled ? "opacity-30 cursor-not-allowed shadow-none grayscale" : "cursor-pointer"}
         ${className}
       `}
+      style={{ boxShadow: disabled ? 'none' : '6px 6px 0px 0px #000000' }}
       {...props}
     >
-      {icon && <span className="text-sm">{icon}</span>}
       {children}
-    </motion.button>
+    </button>
   );
 }
