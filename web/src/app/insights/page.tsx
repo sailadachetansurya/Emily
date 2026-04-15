@@ -67,7 +67,7 @@ export default function InsightsPage() {
            transition={{ delay: 0.1 }}
            className="lg:col-span-2"
         >
-          <Card className="h-full flex flex-col" accent="green" glow>
+          <Card className="h-full flex flex-col" accent="green" label="BEHAVIOR_SIGNALS">
             <div className="p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 rounded bg-neon-green/10 border border-neon-green/30 flex items-center justify-center text-neon-green">
@@ -107,7 +107,7 @@ export default function InsightsPage() {
            className="flex flex-col gap-6"
         >
           {/* Metrics */}
-          <Card accent="cyan">
+          <Card accent="cyan" label="METRIC_STACK">
             <div className="p-8">
               <div className="flex items-center gap-3 mb-6">
                  <div className="w-8 h-8 rounded bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan">
@@ -130,7 +130,7 @@ export default function InsightsPage() {
           </Card>
 
           {/* Triggers */}
-          <Card accent="orange" className="flex-1">
+          <Card accent="orange" className="flex-1" label="TRIGGER_MAP">
             <div className="p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 rounded bg-neon-orange/10 border border-neon-orange/30 flex items-center justify-center text-neon-orange">

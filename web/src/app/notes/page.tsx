@@ -83,7 +83,7 @@ export default function NotesPage() {
            animate={{ opacity: 1, x: 0 }}
            transition={{ delay: 0.1 }}
         >
-          <Card className="h-full flex flex-col" accent="cyan" glow>
+          <Card className="h-full flex flex-col" accent="cyan" label="DRAFT_BUFFER">
             <div className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 rounded bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan">
@@ -139,7 +139,7 @@ export default function NotesPage() {
            animate={{ opacity: 1, x: 0 }}
            transition={{ delay: 0.2 }}
         >
-          <Card className="h-full flex flex-col" accent="violet" glow>
+          <Card className="h-full flex flex-col" accent="violet" label="ANALYZE_RECORDS">
             <div className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 rounded bg-neon-violet/10 border border-neon-violet/30 flex items-center justify-center text-neon-violet">
