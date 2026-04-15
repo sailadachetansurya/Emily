@@ -1,0 +1,25 @@
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirement files first for better caching
+COPY core/requirements.txt ./core/
+
+# Install the Python dependencies (Upgrade pip first)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r core/requirements.txt
+
+# Copy the entire backend source code
+COPY core/ ./core/
+
+# Set the Environment variables 
+ENV PYTHONPATH="/app/core/src"
+ENV ECHO_DB_PATH="/data/echo_app.db"
+
+# Expose the API port
+EXPOSE 8000
+
+# Start Uvicorn pointing to the main app inside core/src/pipeline/api/main.py
+CMD ["sh", "-c", "uvicorn pipeline.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
