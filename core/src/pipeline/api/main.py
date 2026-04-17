@@ -443,17 +443,17 @@ async def update_user_profile(request: ProfileRequest, authorization: Optional[s
 @app.on_event("startup")
 async def startup_event():
     global _pipeline
-    print("🚀 Starting Emily API server...")
+    print("[STARTUP] Starting Emily API server...")
     init_db()
     if os.getenv("ECHO_SKIP_PIPELINE_PRELOAD", "0") == "1":
-        print("⚠️ Pipeline preload skipped by env")
+        print("[STARTUP] Pipeline preload skipped by env")
         return
     _pipeline = EmotivePipeline()
-    print("✅ Pipeline loaded successfully")
+    print("[STARTUP] Pipeline loaded successfully")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     global _pipeline
-    print("👋 Shutting down Emily API server...")
+    print("[SHUTDOWN] Shutting down Emily API server...")
     _pipeline = None

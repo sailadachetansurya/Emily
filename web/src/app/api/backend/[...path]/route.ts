@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const EMILY_BASE_URL = process.env.EMILY_API_URL || "http://localhost:8000";
+const EMILY_BASE_URL = process.env.EMILY_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function proxy(request: NextRequest, path: string[]) {
   const target = `${EMILY_BASE_URL}/api/${path.join("/")}`;
@@ -10,22 +10,39 @@ async function proxy(request: NextRequest, path: string[]) {
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const body = hasBody ? await request.text() : undefined;
 
-  const upstream = await fetch(target, {
-    method: request.method,
-    headers: {
-      ...(contentType ? { "Content-Type": contentType } : {}),
-      ...(authorization ? { Authorization: authorization } : {}),
-    },
-    body,
-  });
+  try {
+    const upstream = await fetch(target, {
+      method: request.method,
+      headers: {
+        ...(contentType ? { "Content-Type": contentType } : {}),
+        ...(authorization ? { Authorization: authorization } : {}),
+      },
+      body,
+      cache: 'no-store',
+    });
 
-  const text = await upstream.text();
-  return new NextResponse(text, {
-    status: upstream.status,
-    headers: {
-      "Content-Type": upstream.headers.get("content-type") || "application/json",
-    },
-  });
+    const text = await upstream.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+
+    return NextResponse.json(data, {
+      status: upstream.status,
+    });
+  } catch (error) {
+    console.error("Proxy error:", error);
+    return NextResponse.json(
+      { 
+        error: "Backend Unreachable", 
+        detail: error instanceof Error ? error.message : String(error),
+        target: target 
+      },
+      { status: 504 }
+    );
+  }
 }
 
 function getPath(request: NextRequest): string[] {
