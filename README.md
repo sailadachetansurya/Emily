@@ -1,3 +1,13 @@
+---
+title: ECHO Emily Backend
+emoji: 🧠
+colorFrom: indigo
+colorTo: pink
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🌟 Emily: The Emotive Intelligence Ecosystem
 
 > **Bridging the gap between human affect and machine logic.**
