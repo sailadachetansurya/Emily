@@ -1,85 +1,97 @@
----
-title: ECHO Emily Backend
-emoji: 🧠
-colorFrom: indigo
-colorTo: pink
-sdk: docker
-pinned: false
----
-
 # 🌟 Emily: The Emotive Intelligence Ecosystem
 
 > **Bridging the gap between human affect and machine logic.**
 
-Emily is a state-of-the-art framework for building emotionally intelligent systems. This repository integrates deep emotional analysis, longitudinal memory tracking, and a premium wellness interface designed to foster empathy and self-awareness.
+Emily is a high-performance framework for building emotionally intelligent systems. This repository contains the **Core AI Engine** and the **ECHO Platform** (Next.js OS-style interface).
 
 ---
 
-## 🏗️ Architecture: The Monorepo Breakdown
+## 🏗️ Project Structure
 
-To maintain production-grade scalability and clarity, the ecosystem is organized into two primary pillars:
+This is a **monorepo** split into two primary pillars:
 
-### 🧠 [Core Engine](./core)
-The "Brain" of Emily. This directory contains the NLP models, training pipelines, and the emotional policy system.
-- **Emotion Extraction**: Multi-dimensional valence/arousal/stability detection.
-- **Dataset Management**: Specialized pipelines for emotional ground-truth processing.
-- **Policy Engine**: Deterministic rules for safe and empathetic AI interactions.
-
-### 🌐 [ECHO Platform](./web)
-The "Heart" of Emily. A high-fidelity Next.js web application for users to journal, track, and visualize their emotional journey.
-- **Emotional Timeline**: Interactive temporal analysis using Recharts.
-- **Trigger Mapping**: Discovery of environmental and social emotional triggers.
-- **Recovery Dashboard**: Metric-driven progress tracking for wellness.
+| Component | Location | Responsibility |
+| :--- | :--- | :--- |
+| **🧠 Core Engine** | `core/` | FastAPI Backend, NLP Models, SQLite Persistence |
+| **🌐 ECHO Platform** | `web/` | Next.js Frontend (Neubrutalist OS UI) |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 For Contributors (Local Setup)
+
+If you are a collaborator, follow these steps to run the full stack locally.
 
 ### 1. Requirements
 - **Node.js**: 18.x or higher
-- **Python**: 3.10+ (for core engine)
-- **Git**: Professional workflow enabled
+- **Python**: 3.10 or 3.11 (Recommended)
 
-### 2. Spinning up the Web Platform
-```bash
-cd web
-npm install
-npm run dev
-```
+### 2. Backend Setup (`core`)
+1.  **Navigate & Virtual Env**:
+    ```powershell
+    cd core
+    python -m venv .venv
+    .venv\Scripts\activate # On Windows
+    ```
+2.  **Install Dependencies**:
+    ```powershell
+    pip install -r requirements.txt
+    pip install -e . # Install as editable package
+    ```
+3.  **Run the API**:
+    On Windows (PowerShell):
+    ```powershell
+    $env:PYTHONPATH="src"
+    python -m uvicorn pipeline.api.main:app --reload --port 8000
+    ```
+    *(The backend will run at http://localhost:8000)*
 
-### 3. Running Core AI Tasks
-```bash
-cd core
-pip install -r requirements-api.txt
-python run_prepare_emotion_dataset.py
-```
+### 3. Frontend Setup (`web`)
+1.  **Navigate & Install**:
+    ```powershell
+    cd web
+    npm install
+    ```
+2.  **Environment Config**:
+    Create a `.env.local` file inside the `web/` directory:
+    ```env
+    NEXT_PUBLIC_API_URL=http://localhost:8000
+    ```
+3.  **Launch Dashboard**:
+    ```powershell
+    npm run dev
+    ```
+    *(The UI will be visible at http://localhost:3000)*
 
 ---
 
-## 📊 Documentation & Research
+## 📡 Deployment Guide
 
-We provide comprehensive guides and scholarly synthesis for deep exploration:
-
-- 📑 **[NotebookLM Master Prompt](./docs/NOTEBOOKLM_MASTER_PROMPT_EMOTIONAL_INTELLIGENCE.md)**: Paste this into Google NotebookLM for a 10/10 research experience.
-- 🔬 **[NLP Training Essentials](./docs/NLP%20Emotion%20Model%20Training%20Essentials.md)**: Deep dive into the model architecture.
-- 🛡️ **[Safety & Policy Guide](./docs/Basic%20Emotive%20AI%20Implementation%20Guide.md)**: How we ensure responsible emotive AI.
-
----
-
-## 🛠️ Contribution Workflow
-
-1. **Branching**: Always branch from `main` using `feature/` or `fix/` prefixes.
-2. **Structure**: Keep logic in `core/` and UI in `web/`.
-3. **Commit Messages**: Use conventional commits (e.g., `feat(web): add recovery charts`).
-
----
-
-## 📡 Deployment (Netlify/Vercel)
-
-This repo is optimized for **Netlify**.
+### Frontend (Netlify)
 - **Base directory**: `web`
 - **Build command**: `npm run build`
 - **Publish directory**: `.next`
+- **Environment Variables**: Set `NEXT_PUBLIC_API_URL` to your live backend URL.
+
+### Backend (Hugging Face Spaces / Docker)
+The project includes a `Dockerfile` optimized for **Hugging Face Spaces** (Docker SDK).
+
+1.  Create a new **Docker Space** on Hugging Face.
+2.  **Sync Code**: Use the GitHub Action provided in `.github/workflows/sync_to_hf_space.yml`.
+    - You MUST add your `HF_TOKEN` as a Secret in your GitHub Repo settings for this to work.
+3.  **Hugging Face Environment Variables**:
+    - `ECHO_ALLOWED_ORIGINS`: Set this to your Netlify URL (e.g., `https://emilysecho.netlify.app`) to fix CORS issues.
+
+---
+
+## 🛠️ Troubleshooting
+
+### "Request failed: 500" on Login
+This usually happens if the backend cannot write to its database or if CORS is blocking the request.
+1.  **Check CORS**: Ensure `ECHO_ALLOWED_ORIGINS` on your backend host includes your Netlify address.
+2.  **Check Database Permissions**: The backend tries to save data to `/data/echo_app.db`. Ensure your hosting provider allows writing to that path.
+
+### Sync issues
+The GitHub Action only runs on the repository where the `HF_TOKEN` secret is defined. If you are a collaborator, the sync will only happen if you set up your own Hugging Face Space and add your own token to your fork.
 
 ---
 

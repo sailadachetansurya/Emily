@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the entire backend source code
 COPY core/ ./core/
 
+# Setup persistent directories and logs (needed for SQLite and user sessions)
+RUN mkdir -p /data /app/core/logs && chmod -R 777 /data /app/core/logs
+
 # Set the Environment variables 
 ENV PYTHONPATH="/app/core/src"
 ENV ECHO_DB_PATH="/data/echo_app.db"
@@ -21,5 +24,5 @@ ENV ECHO_DB_PATH="/data/echo_app.db"
 # Expose the API port (7860 is required for completely free Hugging Face Spaces)
 EXPOSE 7860
 
-# Start Uvicorn pointing to the main app inside core/src/pipeline/api/main.py
+# Start Uvicorn pointing to the main app
 CMD ["sh", "-c", "uvicorn pipeline.api.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

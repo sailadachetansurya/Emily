@@ -50,12 +50,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         origin.strip()
-        for origin in os.getenv("ECHO_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",")
+        for origin in os.getenv(
+            "ECHO_ALLOWED_ORIGINS", 
+            "http://localhost:3000,http://localhost:3001,https://emilysecho.netlify.app"
+        ).split(",")
         if origin.strip()
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 _pipeline: Optional[EmotivePipeline] = None
