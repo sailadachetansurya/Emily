@@ -45,13 +45,21 @@ class OllamaPromptRequest:
 
     @classmethod
     def from_prompt_bundle(cls, model: str, prompt: PromptBundle, stream: bool = False) -> "OllamaPromptRequest":
+        raw = dict(prompt.generation_params)
+        options: dict[str, Any] = {}
+        if "max_tokens" in raw:
+            options["num_predict"] = raw["max_tokens"]
+        if "temperature" in raw:
+            options["temperature"] = raw["temperature"]
+        if "top_p" in raw:
+            options["top_p"] = raw["top_p"]
         return cls(
             model=model,
             system_prompt=prompt.system_prompt,
             user_prompt=prompt.user_prompt,
             context_blocks=list(prompt.context_blocks),
             do_not_constraints=list(prompt.do_not_constraints),
-            options=dict(prompt.generation_params),
+            options=options,
             stream=stream,
         )
 
@@ -150,7 +158,11 @@ class OllamaResponseContract:
         )
 
     def to_generation_text(self) -> str:
-        return self.response.strip()
+        text = self.response.strip()
+        import re
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        text = re.sub(r"<reasoning>.*?</reasoning>", "", text, flags=re.DOTALL).strip()
+        return text
 
 
 def validate_schema(payload: dict[str, Any], schema: dict[str, Any], stage: str, part: str, error_message: str) -> None:

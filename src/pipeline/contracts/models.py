@@ -88,6 +88,8 @@ class SafeResponse:
     text: str
     was_regenerated: bool = False
     safety_notes: list[str] = field(default_factory=list)
+    raw_text: str = ""
+    pruning_method: str = "python"
 
 
 @dataclass

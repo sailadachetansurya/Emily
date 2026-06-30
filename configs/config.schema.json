@@ -31,6 +31,8 @@
     "llamacpp_n_tokens": { "type": "integer", "minimum": 1 },
     "episodic_max_exchanges": { "type": "integer", "minimum": 1 },
     "episodic_ttl_hours": { "type": "integer", "minimum": 1 },
-    "episodic_max_episodes": { "type": "integer", "minimum": 1 }
+    "episodic_max_episodes": { "type": "integer", "minimum": 1 },
+    "output_pruning_mode": { "type": "string", "enum": ["python", "llm", "off"] },
+    "pruning_confidence_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
   }
 }

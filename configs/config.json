@@ -16,5 +16,7 @@
   "llamacpp_n_tokens": 256,
   "episodic_max_exchanges": 10,
   "episodic_ttl_hours": 24,
-  "episodic_max_episodes": 50
+  "episodic_max_episodes": 50,
+  "output_pruning_mode": "llm",
+  "pruning_confidence_threshold": 0.9
 }

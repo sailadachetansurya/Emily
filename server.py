@@ -176,6 +176,8 @@ def _run_pipeline(job: Job, user_input: str) -> str:
 
     job.result_data = {
         "response": result.response.text,
+        "raw_text": getattr(result.response, "raw_text", ""),
+        "pruning_method": getattr(result.response, "pruning_method", "python"),
         "safety_notes": result.response.safety_notes,
         "traces": [{"stage": t.stage_name, "status": t.status} for t in result.traces],
     }

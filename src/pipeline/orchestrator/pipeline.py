@@ -24,7 +24,11 @@ class EmotivePipeline:
         self.policy_engine = DeterministicPolicyEngine()
         self.prompt_builder = DefaultPromptBuilder()
         self.llm_client = self.build_llm_client()
-        self.safety_processor = ProjectionSafetyProcessor()
+        self.safety_processor = ProjectionSafetyProcessor(
+            llm_client=self.llm_client,
+            pruning_mode=self.config.output_pruning_mode,
+            confidence_threshold=self.config.pruning_confidence_threshold,
+        )
         self.telemetry = JsonTelemetrySink(output_path=self.config.telemetry_path)
         self.reasoning_loop = ReasoningLoopOrchestrator(
             llm_client=self.llm_client,
@@ -90,6 +94,9 @@ class EmotivePipeline:
             ))
         else:
             generated = self.llm_client.generate(prompt)
+
+        if not generated.raw_text.strip():
+            generated = self.llm_client.fallback_generation(prompt)
 
         self._on_stage("llm_generation")
         traces.append(StageTrace(stage_name="llm_generation", status="ok", metadata={"generation": asdict(generated)}))

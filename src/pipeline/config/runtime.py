@@ -39,6 +39,8 @@ RUNTIME_CONFIG_SCHEMA: dict[str, object] = {
         "episodic_max_exchanges",
         "episodic_ttl_hours",
         "episodic_max_episodes",
+        "output_pruning_mode",
+        "pruning_confidence_threshold",
     ],
 }
 
@@ -63,6 +65,8 @@ class RuntimeConfig:
     episodic_max_exchanges: int = 10
     episodic_ttl_hours: int = 24
     episodic_max_episodes: int = 50
+    output_pruning_mode: str = "python"
+    pruning_confidence_threshold: float = 0.9
 
 
 class ConfigLoader:
@@ -93,6 +97,8 @@ class ConfigLoader:
             episodic_max_exchanges=payload.get("episodic_max_exchanges", 10),
             episodic_ttl_hours=payload.get("episodic_ttl_hours", 24),
             episodic_max_episodes=payload.get("episodic_max_episodes", 50),
+            output_pruning_mode=payload.get("output_pruning_mode", "python"),
+            pruning_confidence_threshold=payload.get("pruning_confidence_threshold", 0.9),
         )
 
     def validate(self, payload: dict[str, object]) -> None:

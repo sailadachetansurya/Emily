@@ -57,7 +57,13 @@ const jobs = new Map();
 function loadJobsFromStorage() {
   try {
     const raw = localStorage.getItem(JOB_STORAGE_KEY);
-    if (raw) JSON.parse(raw).forEach(j => jobs.set(j.job_id, j));
+    if (raw) {
+      const arr = JSON.parse(raw);
+      arr.forEach(j => {
+        if (j.status === 'running') j.status = 'stale';
+        jobs.set(j.job_id, j);
+      });
+    }
   } catch { /* ignore */ }
 }
 
@@ -213,6 +219,8 @@ function showJobResult(r) {
         (d.failed ? ` | Failed: ${d.failed}` : '') +
         (d.errors ? ` | Errors: ${d.errors}` : '') +
         '\n\n' + (d.raw || r.output);
+    } else if (r.kind === 'run_pipeline' && r.result_data) {
+      outEl.innerHTML = formatPipelineResult(r);
     } else {
       outEl.textContent = r.output;
     }
@@ -222,6 +230,39 @@ function showJobResult(r) {
     outEl.classList.remove('running');
     outEl.classList.add('error');
   }
+}
+
+function formatPipelineResult(r) {
+  const d = r.result_data;
+  if (!d) return r.output || 'No output';
+  let html = '<div class="pipeline-result">';
+  html += `<div class="pr-response">${escHtml(d.response || 'No response')}</div>`;
+  if (d.raw_text && d.raw_text !== d.response) {
+    html += `<div class="pr-section"><span class="pr-label">Raw output (${d.pruning_method} pruning)</span>`;
+    html += `<div class="pr-note" style="font-style:italic">${escHtml(d.raw_text)}</div></div>`;
+  }
+  if (d.safety_notes && d.safety_notes.length) {
+    html += '<div class="pr-section"><span class="pr-label">Safety notes</span>';
+    d.safety_notes.forEach(n => html += `<div class="pr-note">${escHtml(n)}</div>`);
+    html += '</div>';
+  }
+  if (d.traces && d.traces.length) {
+    html += '<div class="pr-section"><span class="pr-label">Pipeline stages</span><div class="pr-stages">';
+    d.traces.forEach(t => {
+      html += `<span class="pr-stage ${t.status}">${t.stage}</span>`;
+    });
+    html += '</div></div>';
+  }
+  const dur = r.duration_ms ? `<span class="pr-section" style="display:block;margin-top:6px;font-size:0.65rem;color:var(--silver)">Completed in ${r.duration_ms}ms</span>` : '';
+  html += dur;
+  html += '</div>';
+  return html;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 /* ── Error formatting ──────────────────────────────────────── */
