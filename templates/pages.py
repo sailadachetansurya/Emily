@@ -1,5 +1,37 @@
 """Page content fragments for the Emily control panel."""
 
+STAGE_NAMES = {
+    "input_gateway": "Input Gateway",
+    "emotion_perception": "Emotion Engine",
+    "dual_memory": "Memory",
+    "policy_mapper": "Policy",
+    "prompt_constructor": "Prompt",
+    "reasoning_loop": "Reasoning",
+    "llm_generation": "LLM",
+    "output_pruning": "Safety",
+}
+
+STAGE_PROGRESS_HTML = """
+<div class="stage-progress" id="stageProgress">
+  <div class="stage-track">
+    <div class="stage-step" data-stage="input_gateway"><div class="stage-dot"></div><span>Input</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="emotion_perception"><div class="stage-dot"></div><span>Emotion</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="dual_memory"><div class="stage-dot"></div><span>Memory</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="policy_mapper"><div class="stage-dot"></div><span>Policy</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="prompt_constructor"><div class="stage-dot"></div><span>Prompt</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="llm_generation"><div class="stage-dot"></div><span>LLM</span></div>
+    <div class="stage-line"></div>
+    <div class="stage-step" data-stage="output_pruning"><div class="stage-dot"></div><span>Safety</span></div>
+  </div>
+  <div class="stage-label" id="stageLabel"></div>
+</div>
+"""
+
 OVERVIEW = """
 <div class="page-header">
   <h2>Overview</h2>
@@ -8,7 +40,7 @@ OVERVIEW = """
 
 <div class="section">
   <div class="card">
-    <div class="status-row" id="statusRow">
+    <div class="status-row">
       <div class="status-item">
         <div class="status-value"><span class="pulse-dot active"></span>Ready</div>
         <div class="status-label">Pipeline</div>
@@ -25,7 +57,7 @@ OVERVIEW = """
       </div>
       <div class="status-divider"></div>
       <div class="status-item">
-        <div class="status-value" id="modelStatus">—</div>
+        <div class="status-value" id="modelStatus">&mdash;</div>
         <div class="status-label">Emotion model</div>
       </div>
     </div>
@@ -39,8 +71,9 @@ OVERVIEW = """
       <label class="field-label" for="quickInput">Say something to Emily</label>
       <textarea id="quickInput" rows="2" placeholder="I have been feeling lonely and anxious lately..."></textarea>
     </div>
+    """ + STAGE_PROGRESS_HTML + """
     <div class="btn-group">
-      <button class="btn btn-primary" onclick="quickRun()">Send</button>
+      <button class="btn btn-primary" id="quickRunBtn" onclick="quickRun()">Send</button>
       <button class="btn btn-ghost" onclick="document.getElementById('quickInput').value='I have been feeling lonely and anxious lately.'">Sample</button>
     </div>
     <div style="margin-top:12px">
@@ -49,10 +82,27 @@ OVERVIEW = """
   </div>
 </div>
 
-<div class="section">
-  <div class="section-label">Recent jobs</div>
-  <div class="card">
-    <div id="jobList"><div class="empty">No recent jobs</div></div>
+<div class="grid-2">
+  <div class="section">
+    <div class="section-label">Test suite</div>
+    <div class="card">
+      <p style="font-size:0.78rem;color:var(--slate);line-height:1.6;margin-bottom:12px">
+        Run the full test suite to verify pipeline integrity.
+      </p>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="runTestsBtn" onclick="runTests()">Run tests</button>
+      </div>
+      <div style="margin-top:12px">
+        <div class="output" id="testOutput"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Recent jobs</div>
+    <div class="card">
+      <div id="jobList"><div class="empty">No recent jobs</div></div>
+    </div>
   </div>
 </div>
 
@@ -60,12 +110,27 @@ OVERVIEW = """
 async function quickRun() {
   const input = document.getElementById('quickInput').value.trim();
   if (!input) return;
+  const btn = document.getElementById('quickRunBtn');
   const out = document.getElementById('quickOutput');
-  out.textContent = 'Running...';
+  btn.disabled = true;
+  out.textContent = 'Running pipeline...';
   out.classList.add('running');
+  resetStageProgress();
   const r = await API.post('/api/pipeline/run', { user_input: input });
+  btn.disabled = false;
   if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'Pipeline' });
+  addJob({ ...r, kind: 'run_pipeline' });
+}
+async function runTests() {
+  const btn = document.getElementById('runTestsBtn');
+  const out = document.getElementById('testOutput');
+  btn.disabled = true;
+  out.textContent = 'Running tests...';
+  out.classList.add('running');
+  const r = await API.post('/api/tests/run');
+  btn.disabled = false;
+  if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
+  addJob({ ...r, kind: 'test_suite' });
 }
 async function loadOverview() {
   const cfg = await API.get('/api/config');
@@ -75,7 +140,8 @@ async function loadOverview() {
   try {
     const s = await fetch('/dataset/emotion_model.json');
     document.getElementById('modelStatus').textContent = s.ok ? 'Trained' : 'Not found';
-  } catch { document.getElementById('modelStatus').textContent = '—'; }
+  } catch { document.getElementById('modelStatus').textContent = '\u2014'; }
+  document.getElementById('jobCount').textContent = jobs.size;
 }
 loadOverview();
 </script>
@@ -91,11 +157,14 @@ PIPELINE = """
   <div class="card">
     <div class="field-row">
       <label class="field-label" for="pipelineInput">User input</label>
-      <textarea id="pipelineInput" rows="4" placeholder="Type a message for Emily..."></textarea>
+      <textarea id="pipelineInput" rows="4" placeholder="Type a message for Emily..." onkeydown="if(event.key==='Enter'&&event.ctrlKey)runPipeline()"></textarea>
+      <div class="field-hint">Ctrl+Enter to run</div>
     </div>
+    """ + STAGE_PROGRESS_HTML + """
     <div class="btn-group">
       <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">Run pipeline</button>
       <button class="btn btn-ghost" onclick="document.getElementById('pipelineInput').value='I have been feeling lonely and anxious lately.'">Load sample</button>
+      <button class="btn btn-ghost" onclick="copyOutput('pipelineOutput')">Copy output</button>
     </div>
     <div style="margin-top:16px">
       <label class="field-label">Response</label>
@@ -131,10 +200,11 @@ async function runPipeline() {
   btn.disabled = true;
   out.textContent = 'Running pipeline...';
   out.classList.add('running');
+  resetStageProgress();
   const r = await API.post('/api/pipeline/run', { user_input: input });
   btn.disabled = false;
   if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'Pipeline' });
+  addJob({ ...r, kind: 'run_pipeline' });
 }
 loadConfig();
 </script>
@@ -192,7 +262,7 @@ async function prepareDataset() {
   out.classList.add('running');
   const r = await API.post('/api/dataset/prepare');
   if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'Dataset' });
+  addJob({ ...r, kind: 'prepare_dataset' });
 }
 async function trainModel() {
   const out = document.getElementById('trainOutput');
@@ -200,7 +270,7 @@ async function trainModel() {
   out.classList.add('running');
   const r = await API.post('/api/model/train');
   if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'Training' });
+  addJob({ ...r, kind: 'train_model' });
 }
 async function loadDatasetInfo() {
   const el = document.getElementById('datasetInfo');
@@ -210,7 +280,7 @@ async function loadDatasetInfo() {
     const d = await s.json();
     let html = '';
     for (const [src, info] of Object.entries(d.sources || {})) {
-      html += `<b>${src}</b> — train: ${info.train_rows}`;
+      html += `<b>${src}</b> \u2014 train: ${info.train_rows}`;
       if (info.validation_rows) html += `, val: ${info.validation_rows}`;
       if (info.test_rows) html += `, test: ${info.test_rows}`;
       html += '<br>';
@@ -293,6 +363,7 @@ CONFIG = """
 <div class="btn-group" style="margin-top:16px">
   <button class="btn btn-primary" onclick="saveConfig()">Save changes</button>
   <button class="btn btn-ghost" onclick="loadConfigPage()">Reload</button>
+  <span id="configStatus" style="font-size:0.7rem;color:var(--slate);align-self:center;margin-left:8px"></span>
 </div>
 
 <script>
@@ -316,6 +387,12 @@ async function loadConfigPage() {
     field.appendChild(input);
     grid.appendChild(field);
   }
+}
+async function saveConfig() {
+  await saveConfig();
+  const el = document.getElementById('configStatus');
+  el.textContent = 'Saved';
+  setTimeout(() => el.textContent = '', 2000);
 }
 loadConfigPage();
 </script>

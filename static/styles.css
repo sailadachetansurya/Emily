@@ -133,6 +133,14 @@ textarea{resize:vertical;min-height:100px}
 }
 .output:empty::before{content:'Output will appear here.';color:var(--silver)}
 .output.running{border-color:var(--slate)}
+.output.error{border-color:#b04040;color:#b04040}
+.err-type{
+  display:inline-block;padding:1px 6px;border-radius:3px;
+  background:#b0404015;color:#b04040;font-weight:600;font-size:0.68rem;
+  text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;
+}
+.err-stage{color:var(--slate);font-size:0.7rem}
+.err-part{color:var(--charcoal);font-size:0.7rem}
 
 /* ── Table ────────────────────────────────────────────────── */
 .table-wrap{overflow-x:auto}
@@ -178,6 +186,38 @@ tr:last-child td{border-bottom:none}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media(max-width:700px){.grid-2{grid-template-columns:1fr}}
 .full-width{grid-column:1/-1}
+
+/* ── Stage progress ───────────────────────────────────────── */
+.stage-progress{margin:16px 0;display:none}
+.stage-progress.visible{display:block}
+.stage-track{display:flex;align-items:center;gap:0}
+.stage-step{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
+.stage-dot{
+  width:10px;height:10px;border-radius:50%;background:var(--pearl);
+  border:2px solid var(--pearl);transition:all 0.3s;
+}
+.stage-step span{font-size:0.6rem;color:var(--silver);white-space:nowrap;transition:color 0.3s}
+.stage-step.done .stage-dot{background:var(--charcoal);border-color:var(--charcoal)}
+.stage-step.done span{color:var(--charcoal)}
+.stage-step.active .stage-dot{
+  background:var(--charcoal);border-color:var(--charcoal);
+  box-shadow:0 0 0 3px var(--pearl);animation:stagePulse 1s ease-in-out infinite;
+}
+.stage-step.active span{color:var(--charcoal);font-weight:600}
+.stage-step.failed .stage-dot{background:#b04040;border-color:#b04040}
+.stage-step.failed span{color:#b04040}
+.stage-line{flex:1;height:2px;background:var(--pearl);transition:background 0.3s;min-width:12px}
+.stage-line.done{background:var(--charcoal)}
+.stage-label{font-size:0.65rem;color:var(--slate);margin-top:6px;text-align:center;min-height:1em}
+@keyframes stagePulse{0%,100%{box-shadow:0 0 0 3px var(--pearl)}50%{box-shadow:0 0 0 6px transparent}}
+
+/* ── Toast ────────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;right:24px;padding:10px 16px;
+  background:var(--charcoal);color:var(--white);font-size:0.75rem;
+  border-radius:4px;z-index:100;animation:toastIn 0.3s ease-out;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── Fade in ──────────────────────────────────────────────── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -226,51 +266,101 @@ body.theme-sunset :focus-visible{outline-color:#e76f51}
 
 /* ── Theme: Ocean Depths ──────────────────────────────────── */
 body.theme-ocean{
-  --charcoal:#1a2332;--slate:#2d8b8b;--silver:#a8dadc;
-  --pearl:#2d8b8b25;--mist:#1e2a3a;--white:#1a2332;--ink:#f1faee;
+  --charcoal:#1a2332;--slate:#40e0d0;--silver:#40e0d0;
+  --pearl:#40e0d030;--mist:#1e2a3a;--white:#1a2332;--ink:#40e0d0;
   --font-body:'DejaVu Sans',system-ui,sans-serif;
 }
-body.theme-ocean .sidebar{background:#16202e;border-color:#2d8b8b25}
-body.theme-ocean .sidebar-brand h1{color:#a8dadc}
-body.theme-ocean .sidebar-brand span{color:#2d8b8b}
-body.theme-ocean .nav-link:hover{background:#1e2a3a}
-body.theme-ocean .nav-link.active{color:#a8dadc;border-color:#2d8b8b}
-body.theme-ocean .card{border-color:#2d8b8b25}
-body.theme-ocean .card:hover{border-color:#2d8b8b50}
-body.theme-ocean .pulse-dot{background:#2d8b8b}
-body.theme-ocean .btn-primary{background:#2d8b8b;border-color:#2d8b8b;color:#f1faee}
-body.theme-ocean .btn-primary:hover{background:#247070}
-body.theme-ocean .btn-secondary{background:#1e2a3a;color:#a8dadc;border-color:#2d8b8b40}
-body.theme-ocean .toggle.on{background:#2d8b8b}
-body.theme-ocean textarea,body.theme-ocean input{background:#16202e;border-color:#2d8b8b30;color:#f1faee}
-body.theme-ocean .output{background:#16202e;border-color:#2d8b8b25;color:#a8dadc}
-body.theme-ocean ::selection{background:#2d8b8b;color:#f1faee}
-body.theme-ocean :focus-visible{outline-color:#2d8b8b}
-body.theme-ocean .sidebar-footer{color:#2d8b8b60}
+body.theme-ocean .sidebar{background:#16202e;border-color:#40e0d030}
+body.theme-ocean .sidebar-brand h1{color:#40e0d0}
+body.theme-ocean .sidebar-brand span{color:#40e0d090}
+body.theme-ocean .nav-link{color:#40e0d090}
+body.theme-ocean .nav-link:hover{background:#1e2a3a;color:#40e0d0}
+body.theme-ocean .nav-link.active{color:#40e0d0;border-color:#40e0d0}
+body.theme-ocean .card{border-color:#40e0d030}
+body.theme-ocean .card:hover{border-color:#40e0d060}
+body.theme-ocean .pulse-dot{background:#40e0d0}
+body.theme-ocean .btn-primary{background:#40e0d0;border-color:#40e0d0;color:#1a2332}
+body.theme-ocean .btn-primary:hover{background:#35c8b9}
+body.theme-ocean .btn-secondary{background:#1e2a3a;color:#40e0d0;border-color:#40e0d040}
+body.theme-ocean .btn-ghost{color:#40e0d080}
+body.theme-ocean .btn-ghost:hover{color:#40e0d0}
+body.theme-ocean .toggle.on{background:#40e0d0}
+body.theme-ocean textarea,body.theme-ocean input{background:#16202e;border-color:#40e0d030;color:#40e0d0}
+body.theme-ocean .output{background:#16202e;border-color:#40e0d030;color:#40e0d0}
+body.theme-ocean .section-label{color:#40e0d080}
+body.theme-ocean .field-label{color:#40e0d080}
+body.theme-ocean .toggle-label{color:#40e0d0}
+body.theme-ocean .status-label{color:#40e0d080}
+body.theme-ocean .status-value{color:#40e0d0}
+body.theme-ocean .page-header h2{color:#40e0d0}
+body.theme-ocean .page-header p{color:#40e0d080}
+body.theme-ocean .job-id{color:#40e0d060}
+body.theme-ocean .job-kind{color:#40e0d0}
+body.theme-ocean .job-status.completed{color:#40e0d0}
+body.theme-ocean .log-entry{color:#40e0d0}
+body.theme-ocean .log-time{color:#40e0d060}
+body.theme-ocean .log-stage{color:#40e0d0}
+body.theme-ocean .empty{color:#40e0d060}
+body.theme-ocean .config-field input{color:#40e0d0}
+body.theme-ocean ::selection{background:#40e0d0;color:#1a2332}
+body.theme-ocean :focus-visible{outline-color:#40e0d0}
+body.theme-ocean .sidebar-footer{color:#40e0d050}
+body.theme-ocean table{color:#40e0d0}
+body.theme-ocean th{color:#40e0d0;border-color:#40e0d0}
+body.theme-ocean td{border-color:#40e0d020;color:#40e0d0}
+body.theme-ocean .theme-card{border-color:#40e0d020}
+body.theme-ocean .theme-card:hover{border-color:#40e0d050}
+body.theme-ocean .theme-card.selected{border-color:#40e0d0}
+body.theme-ocean .theme-name{color:#40e0d0}
 
 /* ── Theme: Midnight Galaxy ───────────────────────────────── */
 body.theme-galaxy{
-  --charcoal:#2b1e3e;--slate:#4a4e8f;--silver:#a490c2;
-  --pearl:#4a4e8f25;--mist:#33264a;--white:#2b1e3e;--ink:#e6e6fa;
+  --charcoal:#0a0a0a;--slate:#d4a843;--silver:#d4a843;
+  --pearl:#d4a84330;--mist:#111111;--white:#0a0a0a;--ink:#d4a843;
   --font-body:'DejaVu Sans',system-ui,sans-serif;
 }
-body.theme-galaxy .sidebar{background:#241a36;border-color:#4a4e8f25}
-body.theme-galaxy .sidebar-brand h1{color:#a490c2}
-body.theme-galaxy .sidebar-brand span{color:#4a4e8f}
-body.theme-galaxy .nav-link:hover{background:#33264a}
-body.theme-galaxy .nav-link.active{color:#e6e6fa;border-color:#a490c2}
-body.theme-galaxy .card{border-color:#4a4e8f25}
-body.theme-galaxy .card:hover{border-color:#4a4e8f50}
-body.theme-galaxy .pulse-dot{background:#a490c2}
-body.theme-galaxy .btn-primary{background:#4a4e8f;border-color:#4a4e8f;color:#e6e6fa}
-body.theme-galaxy .btn-primary:hover{background:#5c60a0}
-body.theme-galaxy .btn-secondary{background:#33264a;color:#a490c2;border-color:#4a4e8f40}
-body.theme-galaxy .toggle.on{background:#a490c2}
-body.theme-galaxy textarea,body.theme-galaxy input{background:#241a36;border-color:#4a4e8f30;color:#e6e6fa}
-body.theme-galaxy .output{background:#241a36;border-color:#4a4e8f25;color:#a490c2}
-body.theme-galaxy ::selection{background:#a490c2;color:#2b1e3e}
-body.theme-galaxy :focus-visible{outline-color:#a490c2}
-body.theme-galaxy .sidebar-footer{color:#4a4e8f60}
+body.theme-galaxy .sidebar{background:#050505;border-color:#d4a84330}
+body.theme-galaxy .sidebar-brand h1{color:#d4a843}
+body.theme-galaxy .sidebar-brand span{color:#d4a84390}
+body.theme-galaxy .nav-link{color:#d4a84390}
+body.theme-galaxy .nav-link:hover{background:#111111;color:#d4a843}
+body.theme-galaxy .nav-link.active{color:#d4a843;border-color:#d4a843}
+body.theme-galaxy .card{border-color:#d4a84330}
+body.theme-galaxy .card:hover{border-color:#d4a84360}
+body.theme-galaxy .pulse-dot{background:#d4a843}
+body.theme-galaxy .btn-primary{background:#d4a843;border-color:#d4a843;color:#0a0a0a}
+body.theme-galaxy .btn-primary:hover{background:#c09535}
+body.theme-galaxy .btn-secondary{background:#111111;color:#d4a843;border-color:#d4a84340}
+body.theme-galaxy .btn-ghost{color:#d4a84380}
+body.theme-galaxy .btn-ghost:hover{color:#d4a843}
+body.theme-galaxy .toggle.on{background:#d4a843}
+body.theme-galaxy textarea,body.theme-galaxy input{background:#050505;border-color:#d4a84330;color:#d4a843}
+body.theme-galaxy .output{background:#050505;border-color:#d4a84330;color:#d4a843}
+body.theme-galaxy .section-label{color:#d4a84380}
+body.theme-galaxy .field-label{color:#d4a84380}
+body.theme-galaxy .toggle-label{color:#d4a843}
+body.theme-galaxy .status-label{color:#d4a84380}
+body.theme-galaxy .status-value{color:#d4a843}
+body.theme-galaxy .page-header h2{color:#d4a843}
+body.theme-galaxy .page-header p{color:#d4a84380}
+body.theme-galaxy .job-id{color:#d4a84360}
+body.theme-galaxy .job-kind{color:#d4a843}
+body.theme-galaxy .job-status.completed{color:#d4a843}
+body.theme-galaxy .log-entry{color:#d4a843}
+body.theme-galaxy .log-time{color:#d4a84360}
+body.theme-galaxy .log-stage{color:#d4a843}
+body.theme-galaxy .empty{color:#d4a84360}
+body.theme-galaxy .config-field input{color:#d4a843}
+body.theme-galaxy ::selection{background:#d4a843;color:#0a0a0a}
+body.theme-galaxy :focus-visible{outline-color:#d4a843}
+body.theme-galaxy .sidebar-footer{color:#d4a84350}
+body.theme-galaxy table{color:#d4a843}
+body.theme-galaxy th{color:#d4a843;border-color:#d4a843}
+body.theme-galaxy td{border-color:#d4a84320;color:#d4a843}
+body.theme-galaxy .theme-card{border-color:#d4a84320}
+body.theme-galaxy .theme-card:hover{border-color:#d4a84350}
+body.theme-galaxy .theme-card.selected{border-color:#d4a843}
+body.theme-galaxy .theme-name{color:#d4a843}
 
 /* ── Theme: Arctic Frost ──────────────────────────────────── */
 body.theme-arctic{

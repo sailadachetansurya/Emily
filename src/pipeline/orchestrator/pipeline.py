@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from typing import Callable
 
 from pipeline.config.runtime import ConfigLoader
 from pipeline.contracts.models import PipelineResult, RequestEnvelope, SafeResponse, StageTrace
@@ -14,7 +15,8 @@ from pipeline.telemetry.recorder import JsonTelemetrySink
 
 
 class EmotivePipeline:
-    def __init__(self) -> None:
+    def __init__(self, stage_callback: Callable[[str], None] | None = None) -> None:
+        self._on_stage = stage_callback or (lambda _: None)
         self.config = ConfigLoader().load()
         self.input_gateway = DefaultInputGateway()
         self.emotion_engine = self.build_emotion_engine()
@@ -46,18 +48,30 @@ class EmotivePipeline:
 
     def run(self, request: RequestEnvelope) -> PipelineResult:
         traces: list[StageTrace] = []
+
+        self._on_stage("input_gateway")
         normalized = self.input_gateway.normalize(request)
         traces.append(StageTrace(stage_name="input_gateway", status="ok", metadata={"request": asdict(normalized)}))
+
+        self._on_stage("emotion_perception")
         emotion = self.emotion_engine.infer(normalized)
         traces.append(StageTrace(stage_name="emotion_perception", status="ok", metadata={"emotion": asdict(emotion)}))
+
+        self._on_stage("dual_memory")
         memory = self.memory_manager.resolve(normalized, emotion)
         traces.append(StageTrace(stage_name="dual_memory", status="ok", metadata={"memory": asdict(memory)}))
+
+        self._on_stage("policy_mapper")
         decision = self.policy_engine.decide(normalized, emotion, memory)
         policy = decision.policy
         traces.append(StageTrace(stage_name="policy_mapper", status="ok", metadata={"policy": asdict(policy), "scores": decision.score_breakdown}))
+
+        self._on_stage("prompt_constructor")
         prompt = self.prompt_builder.build(normalized, emotion, memory, policy)
         traces.append(StageTrace(stage_name="prompt_constructor", status="ok", metadata={"prompt": asdict(prompt)}))
+
         if self.reasoning_loop.should_activate(decision.score_breakdown):
+            self._on_stage("reasoning_loop")
             generated = self.reasoning_loop.process(prompt, policy, decision.score_breakdown)
             traces.append(StageTrace(
                 stage_name="reasoning_loop",
@@ -66,9 +80,14 @@ class EmotivePipeline:
             ))
         else:
             generated = self.llm_client.generate(prompt)
+
+        self._on_stage("llm_generation")
         traces.append(StageTrace(stage_name="llm_generation", status="ok", metadata={"generation": asdict(generated)}))
+
+        self._on_stage("output_pruning")
         safe = self.safety_processor.validate(generated, policy)
         traces.append(StageTrace(stage_name="output_pruning", status="ok", metadata={"response": asdict(safe)}))
+
         for trace in traces:
             self.telemetry.emit(trace.stage_name, trace.metadata | {"status": trace.status})
         return PipelineResult(request_id=request.request_id, response=safe, traces=traces)

@@ -225,3 +225,60 @@ A point-by-point record of everything implemented in this project.
 - `run_prepare_emotion_dataset.py` — fetches and normalizes HF datasets into training JSONL
 - `run_train_nlp_emotion_model.py` — trains the NLP emotion model from labeled JSONL
 - Both scripts manipulate `sys.path` for standalone execution
+
+---
+
+## 17. Comprehensive Error Reporting
+
+**Files:** `server.py`, `static/app.js`, `static/styles.css`
+
+- `ErrorDetail` dataclass captures structured error info: `stage`, `part`, `detail`, `hint`, `error_type`, `traceback`
+- `_extract_error()` introspects pipeline exceptions (`ConfigValidationError`, `OllamaError`, etc.) to extract structured fields
+- `Job` dataclass now includes `error_detail: ErrorDetail | None`, `started_at`, `finished_at`, `duration_ms`
+- `_job_to_dict()` serializes full error details for API responses
+- Frontend `formatError()` renders structured errors with type badge, stage/part context, and hint
+- CSS classes `.error`, `.err-type`, `.err-stage`, `.err-part` for styled error display
+- Output containers get `.error` class on failure with red border highlight
+
+---
+
+## 18. State Persistence Across Tabs
+
+**Files:** `server.py` (`GET /api/jobs`), `static/app.js`
+
+- **Problem:** Navigating between pages cleared the JavaScript `jobs` Map, losing track of running jobs
+- **Solution:** Two-layer persistence:
+  1. **localStorage:** Job data serialized to `emily-jobs` key on every update; restored on page load via `loadJobsFromStorage()`
+  2. **Server sync:** `GET /api/jobs` endpoint returns all server-side jobs; `syncJobsFromServer()` merges server state with local state on page load
+- Running jobs are re-polled automatically after sync
+- Job list sorted: running jobs first, then by most recent `started_at`
+- `addJob()` and `updateJob()` both call `saveJobsToStorage()` to keep localStorage current
+- `pollJob()` error handling: if polling fails, job status updated to failed with error message
+
+---
+
+## 19. Pipeline Summary Logging
+
+**Files:** `server.py` (`_write_summary()`), `Summary.md`
+
+- After every pipeline run, `_write_summary()` appends a structured markdown entry to `Summary.md`
+- Each entry includes:
+  - Timestamp (UTC)
+  - User input
+  - Pipeline response text
+  - Safety notes (if any)
+  - Stage trace table (stage name + status)
+- File is append-only — accumulates history across runs
+- Summary path exposed via `GET /api/status`
+
+---
+
+## 20. Job Timing and Metadata
+
+**Files:** `server.py`
+
+- `Job.started_at` — ISO timestamp when job thread starts
+- `Job.finished_at` — ISO timestamp when job completes or fails
+- `Job.duration_ms` — elapsed time in milliseconds
+- All three fields serialized in API responses and displayed in the job list
+- `_run_job()` uses `finally` block to guarantee timing is captured even on failure

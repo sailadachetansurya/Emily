@@ -124,6 +124,17 @@ python -m unittest discover tests -v
 
 40 tests covering pipeline core, reasoning loop, NLP training, and dataset preparation.
 
+## Features
+
+### Error Reporting
+Structured error display with error type, pipeline stage, component, detail, and hint. Errors from `ConfigValidationError`, `OllamaError`, and other pipeline exceptions are captured with full context and rendered in the UI with styled badges.
+
+### State Persistence
+Job state persists across page navigation via localStorage + server sync. Running jobs are re-polled automatically when you return to a page. The `GET /api/jobs` endpoint returns all server-side jobs for reconciliation.
+
+### Summary Logging
+Every pipeline run appends a structured entry to `Summary.md` with timestamp, input, response, safety notes, and stage trace table. The file is append-only and accumulates history across runs.
+
 ## Design Notes
 
 - The policy layer is deterministic and explainable — every response mode comes with a score breakdown and rationale
