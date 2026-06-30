@@ -8,6 +8,7 @@ from pipeline.stages.llm_client import LocalLLMClient
 from pipeline.stages.memory_manager import DualMemoryManager
 from pipeline.stages.policy_engine import DeterministicPolicyEngine
 from pipeline.stages.prompt_builder import DefaultPromptBuilder
+from pipeline.stages.reasoning_loop import ReasoningLoopConfig, ReasoningLoopOrchestrator
 from pipeline.stages.safety_processor import ProjectionSafetyProcessor
 from pipeline.telemetry.recorder import JsonTelemetrySink
 
@@ -29,6 +30,14 @@ class EmotivePipeline:
         )
         self.safety_processor = ProjectionSafetyProcessor()
         self.telemetry = JsonTelemetrySink(output_path=self.config.telemetry_path)
+        self.reasoning_loop = ReasoningLoopOrchestrator(
+            llm_client=self.llm_client,
+            config=ReasoningLoopConfig(
+                enabled=self.config.reasoning_loop_enabled,
+                max_iterations=self.config.reasoning_loop_max_iterations,
+                activation_threshold=self.config.reasoning_loop_activation_threshold,
+            ),
+        )
 
     def build_emotion_engine(self):
         if self.config.emotion_model_kind == "nlp_sample":
@@ -48,7 +57,15 @@ class EmotivePipeline:
         traces.append(StageTrace(stage_name="policy_mapper", status="ok", metadata={"policy": asdict(policy), "scores": decision.score_breakdown}))
         prompt = self.prompt_builder.build(normalized, emotion, memory, policy)
         traces.append(StageTrace(stage_name="prompt_constructor", status="ok", metadata={"prompt": asdict(prompt)}))
-        generated = self.llm_client.generate(prompt)
+        if self.reasoning_loop.should_activate(decision.score_breakdown):
+            generated = self.reasoning_loop.process(prompt, policy, decision.score_breakdown)
+            traces.append(StageTrace(
+                stage_name="reasoning_loop",
+                status="ok",
+                metadata=generated.metadata.get("reasoning_loop", {}),
+            ))
+        else:
+            generated = self.llm_client.generate(prompt)
         traces.append(StageTrace(stage_name="llm_generation", status="ok", metadata={"generation": asdict(generated)}))
         safe = self.safety_processor.validate(generated, policy)
         traces.append(StageTrace(stage_name="output_pruning", status="ok", metadata={"response": asdict(safe)}))

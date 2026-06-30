@@ -52,6 +52,16 @@ class OutputPruner(Protocol):
         ...
 
 
+class ReasoningLoop(Protocol):
+    def should_activate(self, score_breakdown: dict[str, float]) -> bool:
+        ...
+
+    def process(
+        self, prompt: PromptBundle, policy: ResponsePolicy, score_breakdown: dict[str, float]
+    ) -> GenerationResult:
+        ...
+
+
 class TelemetrySink(Protocol):
     def emit(self, trace_name: str, payload: dict[str, object]) -> None:
         ...

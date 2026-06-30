@@ -22,6 +22,9 @@
     "emotion_model_kind": { "type": "string", "enum": ["heuristic", "nlp_sample"] },
     "telemetry_path": { "type": "string", "minLength": 1 },
     "max_factual_items": { "type": "integer", "minimum": 1 },
-    "max_emotional_items": { "type": "integer", "minimum": 1 }
+    "max_emotional_items": { "type": "integer", "minimum": 1 },
+    "reasoning_loop_enabled": { "type": "boolean" },
+    "reasoning_loop_max_iterations": { "type": "integer", "minimum": 1 },
+    "reasoning_loop_activation_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
   }
 }

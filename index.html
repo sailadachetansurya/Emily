@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emily - Emotive AI Control</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#ffffff0d;
+  --cyan:#00e5ff;--purple:#b388ff;--pink:#ff80ab;--green:#69f0ae;--amber:#ffd740;
+  --text:#e8e8f0;--text2:#8888a0;--text3:#55556a;
+  --glow-cyan:0 0 20px #00e5ff33,0 0 40px #00e5ff11;
+  --glow-purple:0 0 20px #b388ff33,0 0 40px #b388ff11;
+  --glass:rgba(255,255,255,0.03);--glass-border:rgba(255,255,255,0.06);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+  background:var(--bg);color:var(--text);
+  min-height:100dvh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%,#00e5ff06 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%,#b388ff06 0%,transparent 60%);
+}
+a{color:var(--cyan);text-decoration:none}
+::selection{background:var(--cyan);color:var(--bg)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── Layout ────────────────────────────── */
+.shell{max-width:1200px;margin:0 auto;padding:24px 20px 80px}
+header{display:flex;align-items:center;gap:16px;padding:20px 0 32px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--bg);flex-shrink:0}
+h1{font-size:1.4rem;font-weight:600;letter-spacing:-0.02em}
+h1 span{color:var(--text2);font-weight:400;font-size:0.85rem;margin-left:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:auto;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+
+/* ── Cards ─────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--glass-border);border-radius:16px;
+  padding:24px;position:relative;overflow:hidden;
+  transition:border-color 0.3s ease,box-shadow 0.3s ease;
+}
+.card:hover{border-color:rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
+}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card-icon{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.card-icon.cyan{background:#00e5ff15;color:var(--cyan)}
+.card-icon.purple{background:#b388ff15;color:var(--purple)}
+.card-icon.pink{background:#ff80ab15;color:var(--pink)}
+.card-icon.green{background:#69f0ae15;color:var(--green)}
+.card-icon.amber{background:#ffd74015;color:var(--amber)}
+.card-title{font-size:0.85rem;font-weight:600;letter-spacing:0.02em}
+.card-subtitle{font-size:0.7rem;color:var(--text3);margin-top:2px}
+
+/* ── Inputs ────────────────────────────── */
+textarea,input[type=text],input[type=number]{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:inherit;font-size:0.8rem;padding:12px 14px;
+  outline:none;transition:border-color 0.2s;resize:vertical;
+}
+textarea:focus,input:focus{border-color:var(--cyan);box-shadow:var(--glow-cyan)}
+textarea{min-height:100px;line-height:1.6}
+label{display:block;font-size:0.7rem;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em}
+
+/* ── Buttons ───────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;
+  font-family:inherit;font-size:0.75rem;font-weight:600;letter-spacing:0.02em;
+  border:none;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--cyan);color:var(--bg)}
+.btn-primary:hover{box-shadow:var(--glow-cyan);background:#33ebff}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--text3);background:#1f1f2e}
+.btn-danger{background:#ff525220;color:#ff5252;border:1px solid #ff525230}
+.btn-danger:hover{background:#ff525230}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ── Toggle ────────────────────────────── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:0.75rem;color:var(--text2)}
+.toggle{
+  width:40px;height:22px;border-radius:11px;background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;position:relative;transition:all 0.3s;flex-shrink:0;
+}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:var(--text3);transition:all 0.3s;
+}
+.toggle.on{background:var(--cyan);border-color:var(--cyan)}
+.toggle.on::after{left:20px;background:var(--bg)}
+
+/* ── Output ────────────────────────────── */
+.output{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:14px;font-size:0.72rem;line-height:1.7;color:var(--text2);
+  max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;
+  min-height:60px;
+}
+.output:empty::before{content:'Output will appear here...';color:var(--text3)}
+.output.active{border-color:var(--cyan);animation:borderPulse 1.5s ease-in-out infinite}
+@keyframes borderPulse{0%,100%{border-color:var(--cyan)}50%{border-color:var(--cyan)44}}
+
+/* ── Job list ──────────────────────────── */
+.job-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto}
+.job-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.72rem;
+}
+.job-kind{color:var(--text2);flex:1}
+.job-status{font-weight:600;text-transform:uppercase;letter-spacing:0.05em;font-size:0.65rem}
+.job-status.running{color:var(--amber)}
+.job-status.completed{color:var(--green)}
+.job-status.failed{color:#ff5252}
+
+/* ── Config grid ───────────────────────── */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.config-grid{grid-template-columns:1fr}}
+.config-field{display:flex;flex-direction:column;gap:4px}
+.config-field input{padding:8px 10px}
+
+/* ── Tabs ──────────────────────────────── */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg);border-radius:10px;padding:4px;border:1px solid var(--border)}
+.tab{
+  flex:1;padding:8px 12px;border-radius:7px;font-size:0.72rem;font-weight:500;
+  text-align:center;cursor:pointer;transition:all 0.2s;color:var(--text3);border:none;
+  background:transparent;font-family:inherit;
+}
+.tab.active{background:var(--surface2);color:var(--text)}
+.tab:hover:not(.active){color:var(--text2)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── Particles ─────────────────────────── */
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.4}
+.shell{position:relative;z-index:1}
+
+/* ── Animations ────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeUp 0.5s ease-out backwards}
+.card:nth-child(1){animation-delay:0.05s}
+.card:nth-child(2){animation-delay:0.1s}
+.card:nth-child(3){animation-delay:0.15s}
+.card:nth-child(4){animation-delay:0.2s}
+.card:nth-child(5){animation-delay:0.25s}
+.card:nth-child(6){animation-delay:0.3s}
+</style>
+</head>
+<body>
+
+<canvas class="particles" id="particles"></canvas>
+
+<div class="shell">
+  <header>
+    <div class="logo">E</div>
+    <h1>Emily<span>emotive ai control</span></h1>
+    <div class="status-dot" id="statusDot" title="Pipeline ready"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="pipeline">Pipeline</button>
+    <button class="tab" data-tab="training">Training</button>
+    <button class="tab" data-tab="config">Config</button>
+    <button class="tab" data-tab="logs">Logs</button>
+  </div>
+
+  <!-- ── Pipeline Tab ──────────────────── -->
+  <div class="tab-panel active" id="tab-pipeline">
+    <div class="grid">
+      <div class="card full">
+        <div class="card-header">
+          <div class="card-icon cyan">&#9654;</div>
+          <div><div class="card-title">Run Pipeline</div><div class="card-subtitle">Send input through the emotive AI pipeline</div></div>
+        </div>
+        <label for="pipelineInput">User Input</label>
+        <textarea id="pipelineInput" placeholder="I have been feeling lonely and anxious lately..."></textarea>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="runPipeline" onclick="runPipeline()">Run Pipeline</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('pipelineInput').value='I have been feeling lonely and anxious lately.'">Load Sample</button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Output</label>
+          <div class="output" id="pipelineOutput"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">&#9881;</div>
+          <div><div class="card-title">Reasoning Loop</div><div class="card-subtitle">Internal self-critique system</div></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Enable reasoning loop</span>
+          <div class="toggle" id="toggleReasoning" onclick="toggleConfig('reasoning_loop_enabled',this)"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Max iterations</span>
+          <input type="number" id="maxIter" value="2" min="1" max="5" style="width:60px;padding:6px 8px;text-align:center;border-radius:6px" onchange="updateConfig('reasoning_loop_max_iterations',parseInt(this.value))">
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Activation threshold</span>
+          <input type="number" id="actThreshold" value="0.5" min="0" max="1" step="0.1" style="width:60px;padding:6px 8px;text-align:center;border-radius:6px" onchange="updateConfig('reasoning_loop_activation_threshold',parseFloat(this.value))">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">&#9776;</div>
+          <div><div class="card-title">Active Jobs</div><div class="card-subtitle">Background task tracker</div></div>
+        </div>
+        <div class="job-list" id="jobList">
+          <div style="font-size:0.72rem;color:var(--text3);padding:8px">No active jobs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Training Tab ─────────────────── -->
+  <div class="tab-panel" id="tab-training">
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon amber">&#8635;</div>
+          <div><div class="card-title">Prepare Dataset</div><div class="card-subtitle">Download and normalize HF datasets</div></div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text2);line-height:1.6;margin-bottom:12px">
+          Fetches dair-ai/emotion and Alignment-Lab-AI/EmotionDialogue from Hugging Face,
+          normalizes them into unified JSONL format for training.
+        </p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="prepareDataset()">Prepare Dataset</button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Output</label>
+          <div class="output" id="datasetOutput"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon pink">&#9889;</div>
+          <div><div class="card-title">Train NLP Model</div><div class="card-subtitle">Train the emotion classification model</div></div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text2);line-height:1.6;margin-bottom:12px">
+          Trains a Naive Bayes-style categorical model on the prepared dataset.
+          Requires dataset/emotion_train.jsonl to exist.
+        </p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="trainModel()">Train Model</button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Output</label>
+          <div class="output" id="trainOutput"></div>
+        </div>
+      </div>
+
+      <div class="card full">
+        <div class="card-header">
+          <div class="card-icon cyan">&#128202;</div>
+          <div><div class="card-title">Dataset Info</div><div class="card-subtitle">Current dataset status</div></div>
+        </div>
+        <div id="datasetInfo" style="font-size:0.72rem;color:var(--text2);line-height:1.8">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Config Tab ───────────────────── -->
+  <div class="tab-panel" id="tab-config">
+    <div class="grid">
+      <div class="card full">
+        <div class="card-header">
+          <div class="card-icon purple">&#9881;</div>
+          <div><div class="card-title">Pipeline Configuration</div><div class="card-subtitle">Runtime settings for the emotive pipeline</div></div>
+        </div>
+        <div class="config-grid" id="configGrid">Loading...</div>
+        <div class="btn-group" style="margin-top:16px">
+          <button class="btn btn-primary" onclick="saveConfig()">Save Config</button>
+          <button class="btn btn-secondary" onclick="loadConfig()">Reload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Logs Tab ─────────────────────── -->
+  <div class="tab-panel" id="tab-logs">
+    <div class="grid">
+      <div class="card full">
+        <div class="card-header">
+          <div class="card-icon green">&#128196;</div>
+          <div><div class="card-title">Telemetry Log</div><div class="card-subtitle">Recent pipeline execution traces</div></div>
+        </div>
+        <div class="btn-group" style="margin-bottom:12px">
+          <button class="btn btn-secondary" onclick="loadTelemetry()">Refresh</button>
+        </div>
+        <div class="output" id="telemetryOutput" style="max-height:500px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Particles ──────────────────────────
+(function(){
+  const c=document.getElementById('particles'),ctx=c.getContext('2d');
+  let w,h,particles=[];
+  function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)particles.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*1.5+0.5,a:Math.random()*0.5+0.1});
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,229,255,${p.a})`;ctx.fill();
+    });
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<150){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(0,229,255,${0.06*(1-d/150)})`;ctx.stroke()}
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Tabs ───────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab==='config')loadConfig();
+    if(tab.dataset.tab==='logs')loadTelemetry();
+    if(tab.dataset.tab==='training')loadDatasetInfo();
+  });
+});
+
+// ── API helpers ────────────────────────
+async function api(method,path,body){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch(path,opts);
+  return r.json();
+}
+
+const jobs=new Map();
+function addJob(job){
+  jobs.set(job.job_id,job);
+  renderJobs();
+  pollJob(job.job_id);
+}
+function renderJobs(){
+  const el=document.getElementById('jobList');
+  if(!jobs.size){el.innerHTML='<div style="font-size:0.72rem;color:var(--text3);padding:8px">No active jobs</div>';return}
+  el.innerHTML='';
+  for(const[job_id,j]of jobs){
+    const d=document.createElement('div');d.className='job-item';
+    d.innerHTML=`<span class="job-kind">${j.kind}</span><span class="job-status ${j.status}">${j.status}</span>`;
+    el.appendChild(d);
+  }
+}
+async function pollJob(id){
+  const r=await api('GET',`/api/jobs/${id}`);
+  jobs.set(id,{...jobs.get(id),...r});
+  renderJobs();
+  if(r.status==='running')setTimeout(()=>pollJob(id),1000);
+  else{
+    const outEl=document.getElementById(
+      r.kind==='_run_pipeline'?'pipelineOutput':
+      r.kind==='_prepare_dataset'?'datasetOutput':'trainOutput'
+    );
+    if(outEl){
+      outEl.textContent=r.status==='completed'?r.output:r.error;
+      outEl.classList.remove('active');
+    }
+  }
+}
+
+// ── Pipeline ───────────────────────────
+async function runPipeline(){
+  const input=document.getElementById('pipelineInput').value.trim();
+  if(!input)return;
+  const out=document.getElementById('pipelineOutput');
+  out.textContent='Running pipeline...';out.classList.add('active');
+  document.getElementById('runPipeline').disabled=true;
+  const r=await api('POST','/api/pipeline/run',{user_input:input});
+  document.getElementById('runPipeline').disabled=false;
+  if(r.error){out.textContent='Error: '+r.error;out.classList.remove('active');return}
+  addJob({...r,kind:'Pipeline'});
+}
+
+// ── Training ───────────────────────────
+async function prepareDataset(){
+  const out=document.getElementById('datasetOutput');
+  out.textContent='Preparing dataset...';out.classList.add('active');
+  const r=await api('POST','/api/dataset/prepare');
+  if(r.error){out.textContent='Error: '+r.error;out.classList.remove('active');return}
+  addJob({...r,kind:'Dataset Prep'});
+}
+async function trainModel(){
+  const out=document.getElementById('trainOutput');
+  out.textContent='Training model...';out.classList.add('active');
+  const r=await api('POST','/api/model/train');
+  if(r.error){out.textContent='Error: '+r.error;out.classList.remove('active');return}
+  addJob({...r,kind:'Model Training'});
+}
+async function loadDatasetInfo(){
+  try{
+    const r=await api('GET','/api/telemetry?lines=0');
+    const summary=await fetch('/dataset/dataset_summary.json');
+    if(summary.ok){
+      const s=await summary.json();
+      let html='<b>Sources:</b><br>';
+      for(const[src,info]of Object.entries(s.sources||{})){
+        html+=`&nbsp;&nbsp;${src}: train=${info.train_rows}`;
+        if(info.validation_rows)html+=`, val=${info.validation_rows}`;
+        if(info.test_rows)html+=`, test=${info.test_rows}`;
+        html+='<br>';
+      }
+      html+='<br><b>Outputs:</b><br>';
+      for(const[name]of Object.entries(s.outputs||{}))html+=`&nbsp;&nbsp;${name}<br>`;
+      document.getElementById('datasetInfo').innerHTML=html;
+    }else{
+      document.getElementById('datasetInfo').textContent='No dataset summary found. Run dataset preparation first.';
+    }
+  }catch{document.getElementById('datasetInfo').textContent='Could not load dataset info.'}
+}
+
+// ── Config ─────────────────────────────
+let currentConfig={};
+async function loadConfig(){
+  const r=await api('GET','/api/config');
+  if(r.error)return;
+  currentConfig=r;
+  const grid=document.getElementById('configGrid');
+  grid.innerHTML='';
+  for(const[key,val]of Object.entries(r)){
+    const field=document.createElement('div');field.className='config-field';
+    const label=document.createElement('label');label.textContent=key.replace(/_/g,' ');
+    const input=document.createElement('input');
+    input.type=typeof val==='boolean'?'text':typeof val==='number'?'number':'text';
+    input.value=val;input.dataset.key=key;
+    if(typeof val==='number')input.step=typeof val==='number'&&val<1&&val>0?'0.1':'1';
+    field.appendChild(label);field.appendChild(input);grid.appendChild(field);
+  }
+  // sync toggles
+  const tog=document.getElementById('toggleReasoning');
+  if(r.reasoning_loop_enabled)tog.classList.add('on');else tog.classList.remove('on');
+  document.getElementById('maxIter').value=r.reasoning_loop_max_iterations||2;
+  document.getElementById('actThreshold').value=r.reasoning_loop_activation_threshold||0.5;
+}
+async function saveConfig(){
+  const inputs=document.querySelectorAll('#configGrid input');
+  const update={};
+  inputs.forEach(inp=>{
+    let val=inp.value;
+    if(val==='true')val=true;
+    else if(val==='false')val=false;
+    else if(!isNaN(val)&&val!=='')val=Number(val);
+    update[inp.dataset.key]=val;
+  });
+  await api('POST','/api/config',update);
+  loadConfig();
+}
+async function toggleConfig(key,el){
+  const isOn=el.classList.toggle('on');
+  await api('POST','/api/config',{[key]:isOn});
+  currentConfig[key]=isOn;
+}
+async function updateConfig(key,val){
+  await api('POST','/api/config',{[key]:val});
+  currentConfig[key]=val;
+}
+
+// ── Telemetry ──────────────────────────
+async function loadTelemetry(){
+  const r=await api('GET','/api/telemetry?lines=100');
+  const el=document.getElementById('telemetryOutput');
+  if(!r.entries||!r.entries.length){el.textContent='No telemetry entries yet.';return}
+  el.textContent=r.entries.map(e=>JSON.stringify(e,null,null)).join('\n');
+  el.scrollTop=el.scrollHeight;
+}
+
+// ── Init ───────────────────────────────
+loadDatasetInfo();
+</script>
+</body>
+</html>

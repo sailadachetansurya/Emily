@@ -1,0 +1,7 @@
+# Python bytecode
+
+*.py[cod]
+
+# Python cache directories
+
+**pycache**/

@@ -30,6 +30,9 @@ RUNTIME_CONFIG_SCHEMA: dict[str, object] = {
         "telemetry_path",
         "max_factual_items",
         "max_emotional_items",
+        "reasoning_loop_enabled",
+        "reasoning_loop_max_iterations",
+        "reasoning_loop_activation_threshold",
     ],
 }
 
@@ -45,6 +48,9 @@ class RuntimeConfig:
     telemetry_path: str = "logs/pipeline-telemetry.jsonl"
     max_factual_items: int = 32
     max_emotional_items: int = 64
+    reasoning_loop_enabled: bool = False
+    reasoning_loop_max_iterations: int = 2
+    reasoning_loop_activation_threshold: float = 0.5
 
 
 class ConfigLoader:
@@ -66,6 +72,9 @@ class ConfigLoader:
             telemetry_path=payload.get("telemetry_path", "logs/pipeline-telemetry.jsonl"),
             max_factual_items=payload.get("max_factual_items", 32),
             max_emotional_items=payload.get("max_emotional_items", 64),
+            reasoning_loop_enabled=payload.get("reasoning_loop_enabled", False),
+            reasoning_loop_max_iterations=payload.get("reasoning_loop_max_iterations", 2),
+            reasoning_loop_activation_threshold=payload.get("reasoning_loop_activation_threshold", 0.5),
         )
 
     def validate(self, payload: dict[str, object]) -> None:
@@ -106,6 +115,13 @@ class ConfigLoader:
         self._validate_int(payload, "request_timeout_seconds", minimum=1)
         self._validate_int(payload, "max_factual_items", minimum=1)
         self._validate_int(payload, "max_emotional_items", minimum=1)
+
+        if "reasoning_loop_enabled" in payload:
+            self._validate_bool(payload, "reasoning_loop_enabled")
+        if "reasoning_loop_max_iterations" in payload:
+            self._validate_int(payload, "reasoning_loop_max_iterations", minimum=1)
+        if "reasoning_loop_activation_threshold" in payload:
+            self._validate_float(payload, "reasoning_loop_activation_threshold", minimum=0.0, maximum=1.0)
 
         emotion_model_kind = payload.get("emotion_model_kind", "heuristic")
         if isinstance(emotion_model_kind, str) and emotion_model_kind not in {"heuristic", "nlp_sample"}:
@@ -162,4 +178,28 @@ class ConfigLoader:
                 part=field_name,
                 detail=f"Config field '{field_name}' must be at least {minimum}.",
                 hint="Increase the configured value in configs/config.json.",
+            )
+
+    def _validate_float(self, payload: dict[str, object], field_name: str, minimum: float | None = None, maximum: float | None = None) -> None:
+        value = payload.get(field_name)
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise ConfigValidationError(
+                stage="config_loader",
+                part=field_name,
+                detail=f"Config field '{field_name}' must be a number.",
+                hint="Set a numeric value in configs/config.json.",
+            )
+        if minimum is not None and value < minimum:
+            raise ConfigValidationError(
+                stage="config_loader",
+                part=field_name,
+                detail=f"Config field '{field_name}' must be at least {minimum}.",
+                hint="Increase the configured value in configs/config.json.",
+            )
+        if maximum is not None and value > maximum:
+            raise ConfigValidationError(
+                stage="config_loader",
+                part=field_name,
+                detail=f"Config field '{field_name}' must be at most {maximum}.",
+                hint="Decrease the configured value in configs/config.json.",
             )
