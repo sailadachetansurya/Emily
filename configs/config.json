@@ -8,7 +8,7 @@
   "telemetry_path": "logs/pipeline-telemetry.jsonl",
   "max_factual_items": 32,
   "max_emotional_items": 64,
-  "reasoning_loop_enabled": false,
+  "reasoning_loop_enabled": true,
   "reasoning_loop_max_iterations": 2,
   "reasoning_loop_activation_threshold": 0.5
 }

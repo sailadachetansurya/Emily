@@ -225,10 +225,64 @@ loadDatasetInfo();
 CONFIG = """
 <div class="page-header">
   <h2>Settings</h2>
-  <p>Pipeline configuration</p>
+  <p>Pipeline configuration and appearance</p>
 </div>
 
 <div class="section">
+  <div class="section-label">Theme</div>
+  <div class="card">
+    <div class="theme-grid">
+      <div class="theme-card" data-theme="minimalist">
+        <div class="theme-name">Modern Minimalist</div>
+        <div class="theme-swatches">
+          <div class="theme-swatch" style="background:#36454f"></div>
+          <div class="theme-swatch" style="background:#708090"></div>
+          <div class="theme-swatch" style="background:#e8eaed"></div>
+          <div class="theme-swatch" style="background:#f5f5f5"></div>
+        </div>
+      </div>
+      <div class="theme-card" data-theme="sunset">
+        <div class="theme-name">Sunset Boulevard</div>
+        <div class="theme-swatches">
+          <div class="theme-swatch" style="background:#264653"></div>
+          <div class="theme-swatch" style="background:#e76f51"></div>
+          <div class="theme-swatch" style="background:#f4a261"></div>
+          <div class="theme-swatch" style="background:#e9c46a"></div>
+        </div>
+      </div>
+      <div class="theme-card" data-theme="ocean">
+        <div class="theme-name">Ocean Depths</div>
+        <div class="theme-swatches">
+          <div class="theme-swatch" style="background:#1a2332"></div>
+          <div class="theme-swatch" style="background:#2d8b8b"></div>
+          <div class="theme-swatch" style="background:#a8dadc"></div>
+          <div class="theme-swatch" style="background:#f1faee"></div>
+        </div>
+      </div>
+      <div class="theme-card" data-theme="galaxy">
+        <div class="theme-name">Midnight Galaxy</div>
+        <div class="theme-swatches">
+          <div class="theme-swatch" style="background:#2b1e3e"></div>
+          <div class="theme-swatch" style="background:#4a4e8f"></div>
+          <div class="theme-swatch" style="background:#a490c2"></div>
+          <div class="theme-swatch" style="background:#e6e6fa"></div>
+        </div>
+      </div>
+      <div class="theme-card" data-theme="arctic">
+        <div class="theme-name">Arctic Frost</div>
+        <div class="theme-swatches">
+          <div class="theme-swatch" style="background:#4a6fa5"></div>
+          <div class="theme-swatch" style="background:#c0c0c0"></div>
+          <div class="theme-swatch" style="background:#d4e4f7"></div>
+          <div class="theme-swatch" style="background:#fafafa"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Pipeline</div>
   <div class="card">
     <div class="config-grid" id="configGrid">
       <div class="empty full-width">Loading configuration...</div>

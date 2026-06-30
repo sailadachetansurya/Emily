@@ -1,7 +1,9 @@
 # Python bytecode
-
 *.py[cod]
 
-# Python cache directories
+# Cache directories (correct)
+__pycache__/
+**/__pycache__/
 
-**pycache**/
+# Virtual environment
+.venv/

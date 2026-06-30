@@ -118,8 +118,38 @@ function initNav() {
   });
 }
 
+/* ── Theme switching ──────────────────────────────────────── */
+const THEMES = {
+  minimalist: { name: 'Modern Minimalist', colors: ['#36454f','#708090','#e8eaed','#f5f5f5'] },
+  sunset:     { name: 'Sunset Boulevard',  colors: ['#264653','#e76f51','#f4a261','#e9c46a'] },
+  ocean:      { name: 'Ocean Depths',      colors: ['#1a2332','#2d8b8b','#a8dadc','#f1faee'] },
+  galaxy:     { name: 'Midnight Galaxy',   colors: ['#2b1e3e','#4a4e8f','#a490c2','#e6e6fa'] },
+  arctic:     { name: 'Arctic Frost',      colors: ['#4a6fa5','#c0c0c0','#d4e4f7','#fafafa'] },
+};
+
+function getStoredTheme() {
+  return localStorage.getItem('emily-theme') || 'minimalist';
+}
+
+function applyTheme(id) {
+  document.body.className = '';
+  if (id !== 'minimalist') document.body.classList.add('theme-' + id);
+  localStorage.setItem('emily-theme', id);
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.theme === id);
+  });
+}
+
+function initThemes() {
+  applyTheme(getStoredTheme());
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', () => applyTheme(card.dataset.theme));
+  });
+}
+
 /* ── Init ─────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initToggles();
+  initThemes();
 });

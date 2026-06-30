@@ -193,3 +193,96 @@ tr:last-child td{border-bottom:none}
   .sidebar-footer{display:none}
   .main{margin-left:0;padding:24px 16px}
 }
+
+/* ── Theme selector ───────────────────────────────────────── */
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.theme-card{
+  border:2px solid var(--pearl);padding:14px;cursor:pointer;transition:all 0.2s;
+  position:relative;
+}
+.theme-card:hover{border-color:var(--silver)}
+.theme-card.selected{border-color:var(--charcoal)}
+.theme-card.selected::after{
+  content:'\2713';position:absolute;top:8px;right:10px;font-size:0.7rem;
+  color:var(--charcoal);font-weight:700;
+}
+.theme-name{font-size:0.75rem;font-weight:600;margin-bottom:8px;color:var(--ink)}
+.theme-swatches{display:flex;gap:4px}
+.theme-swatch{width:20px;height:20px;border-radius:3px;border:1px solid rgba(0,0,0,0.08)}
+
+/* ── Theme: Sunset Boulevard ──────────────────────────────── */
+body.theme-sunset{
+  --charcoal:#264653;--slate:#e76f51;--silver:#f4a261;
+  --pearl:#e9c46a30;--mist:#fdf6ec;--white:#fffbf5;--ink:#264653;
+  --font-body:'DejaVu Sans',system-ui,sans-serif;
+}
+body.theme-sunset .sidebar-brand h1{color:#e76f51}
+body.theme-sunset .pulse-dot{background:#e76f51}
+body.theme-sunset .btn-primary{background:#e76f51;border-color:#e76f51}
+body.theme-sunset .btn-primary:hover{background:#d4603e}
+body.theme-sunset .toggle.on{background:#e76f51}
+body.theme-sunset ::selection{background:#e76f51;color:#fffbf5}
+body.theme-sunset :focus-visible{outline-color:#e76f51}
+
+/* ── Theme: Ocean Depths ──────────────────────────────────── */
+body.theme-ocean{
+  --charcoal:#1a2332;--slate:#2d8b8b;--silver:#a8dadc;
+  --pearl:#2d8b8b25;--mist:#1e2a3a;--white:#1a2332;--ink:#f1faee;
+  --font-body:'DejaVu Sans',system-ui,sans-serif;
+}
+body.theme-ocean .sidebar{background:#16202e;border-color:#2d8b8b25}
+body.theme-ocean .sidebar-brand h1{color:#a8dadc}
+body.theme-ocean .sidebar-brand span{color:#2d8b8b}
+body.theme-ocean .nav-link:hover{background:#1e2a3a}
+body.theme-ocean .nav-link.active{color:#a8dadc;border-color:#2d8b8b}
+body.theme-ocean .card{border-color:#2d8b8b25}
+body.theme-ocean .card:hover{border-color:#2d8b8b50}
+body.theme-ocean .pulse-dot{background:#2d8b8b}
+body.theme-ocean .btn-primary{background:#2d8b8b;border-color:#2d8b8b;color:#f1faee}
+body.theme-ocean .btn-primary:hover{background:#247070}
+body.theme-ocean .btn-secondary{background:#1e2a3a;color:#a8dadc;border-color:#2d8b8b40}
+body.theme-ocean .toggle.on{background:#2d8b8b}
+body.theme-ocean textarea,body.theme-ocean input{background:#16202e;border-color:#2d8b8b30;color:#f1faee}
+body.theme-ocean .output{background:#16202e;border-color:#2d8b8b25;color:#a8dadc}
+body.theme-ocean ::selection{background:#2d8b8b;color:#f1faee}
+body.theme-ocean :focus-visible{outline-color:#2d8b8b}
+body.theme-ocean .sidebar-footer{color:#2d8b8b60}
+
+/* ── Theme: Midnight Galaxy ───────────────────────────────── */
+body.theme-galaxy{
+  --charcoal:#2b1e3e;--slate:#4a4e8f;--silver:#a490c2;
+  --pearl:#4a4e8f25;--mist:#33264a;--white:#2b1e3e;--ink:#e6e6fa;
+  --font-body:'DejaVu Sans',system-ui,sans-serif;
+}
+body.theme-galaxy .sidebar{background:#241a36;border-color:#4a4e8f25}
+body.theme-galaxy .sidebar-brand h1{color:#a490c2}
+body.theme-galaxy .sidebar-brand span{color:#4a4e8f}
+body.theme-galaxy .nav-link:hover{background:#33264a}
+body.theme-galaxy .nav-link.active{color:#e6e6fa;border-color:#a490c2}
+body.theme-galaxy .card{border-color:#4a4e8f25}
+body.theme-galaxy .card:hover{border-color:#4a4e8f50}
+body.theme-galaxy .pulse-dot{background:#a490c2}
+body.theme-galaxy .btn-primary{background:#4a4e8f;border-color:#4a4e8f;color:#e6e6fa}
+body.theme-galaxy .btn-primary:hover{background:#5c60a0}
+body.theme-galaxy .btn-secondary{background:#33264a;color:#a490c2;border-color:#4a4e8f40}
+body.theme-galaxy .toggle.on{background:#a490c2}
+body.theme-galaxy textarea,body.theme-galaxy input{background:#241a36;border-color:#4a4e8f30;color:#e6e6fa}
+body.theme-galaxy .output{background:#241a36;border-color:#4a4e8f25;color:#a490c2}
+body.theme-galaxy ::selection{background:#a490c2;color:#2b1e3e}
+body.theme-galaxy :focus-visible{outline-color:#a490c2}
+body.theme-galaxy .sidebar-footer{color:#4a4e8f60}
+
+/* ── Theme: Arctic Frost ──────────────────────────────────── */
+body.theme-arctic{
+  --charcoal:#4a6fa5;--slate:#8a9ab0;--silver:#c0c0c0;
+  --pearl:#d4e4f7;--mist:#f0f4f8;--white:#fafafa;--ink:#2a3a4a;
+  --font-body:'DejaVu Sans',system-ui,sans-serif;
+}
+body.theme-arctic .sidebar{background:#f5f8fc}
+body.theme-arctic .sidebar-brand h1{color:#4a6fa5}
+body.theme-arctic .pulse-dot{background:#4a6fa5}
+body.theme-arctic .btn-primary{background:#4a6fa5;border-color:#4a6fa5;color:#fafafa}
+body.theme-arctic .btn-primary:hover{background:#3d5f90}
+body.theme-arctic .toggle.on{background:#4a6fa5}
+body.theme-arctic ::selection{background:#4a6fa5;color:#fafafa}
+body.theme-arctic :focus-visible{outline-color:#4a6fa5}

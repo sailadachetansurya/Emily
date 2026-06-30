@@ -22,6 +22,12 @@ def render(page_title: str, active_path: str, body_html: str) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{page_title} — Emily</title>
 <link rel="stylesheet" href="/static/styles.css">
+<script>
+(function(){{
+  var t=localStorage.getItem('emily-theme');
+  if(t&&t!=='minimalist')document.body.className='theme-'+t;
+}})();
+</script>
 </head>
 <body>
 <aside class="sidebar">
