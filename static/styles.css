@@ -211,6 +211,26 @@ tr:last-child td{border-bottom:none}
 .stage-label{font-size:0.65rem;color:var(--slate);margin-top:6px;text-align:center;min-height:1em}
 @keyframes stagePulse{0%,100%{box-shadow:0 0 0 3px var(--pearl)}50%{box-shadow:0 0 0 6px transparent}}
 
+/* ── Health grid ──────────────────────────────────────────── */
+.health-grid{display:flex;flex-direction:column;gap:0}
+.health-row{
+  display:flex;align-items:center;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--pearl);font-size:0.78rem;
+}
+.health-row:last-child{border-bottom:none}
+.health-indicator{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.health-indicator.ready{background:#2d8b50}
+.health-indicator.offline{background:#b04040}
+.health-indicator.missing{background:var(--silver)}
+.health-indicator.disabled{background:var(--pearl)}
+.health-indicator.wrong_model{background:var(--slate)}
+.health-indicator.blocked{background:#b04040}
+.health-name{font-weight:600;color:var(--ink);min-width:180px}
+.health-detail{flex:1;color:var(--slate);font-size:0.72rem}
+.health-action{flex-shrink:0}
+
 /* ── Toast ────────────────────────────────────────────────── */
 .toast{
   position:fixed;bottom:24px;right:24px;padding:10px 16px;

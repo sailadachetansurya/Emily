@@ -1,5 +1,5 @@
 {
-  "model_name": "mistral",
+  "model_name": "deepseek-r1:8b",
   "ollama_base_url": "http://localhost:11434",
   "request_timeout_seconds": 30,
   "ollama_stream": false,
@@ -10,5 +10,11 @@
   "max_emotional_items": 64,
   "reasoning_loop_enabled": true,
   "reasoning_loop_max_iterations": 2,
-  "reasoning_loop_activation_threshold": 0.5
+  "reasoning_loop_activation_threshold": 0.5,
+  "llm_provider": "ollama",
+  "llamacpp_base_url": "http://localhost:8080",
+  "llamacpp_n_tokens": 256,
+  "episodic_max_exchanges": 10,
+  "episodic_ttl_hours": 24,
+  "episodic_max_episodes": 50
 }

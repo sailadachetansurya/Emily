@@ -33,6 +33,12 @@ RUNTIME_CONFIG_SCHEMA: dict[str, object] = {
         "reasoning_loop_enabled",
         "reasoning_loop_max_iterations",
         "reasoning_loop_activation_threshold",
+        "llm_provider",
+        "llamacpp_base_url",
+        "llamacpp_n_tokens",
+        "episodic_max_exchanges",
+        "episodic_ttl_hours",
+        "episodic_max_episodes",
     ],
 }
 
@@ -51,6 +57,12 @@ class RuntimeConfig:
     reasoning_loop_enabled: bool = False
     reasoning_loop_max_iterations: int = 2
     reasoning_loop_activation_threshold: float = 0.5
+    llm_provider: str = "ollama"
+    llamacpp_base_url: str = "http://localhost:8080"
+    llamacpp_n_tokens: int = 256
+    episodic_max_exchanges: int = 10
+    episodic_ttl_hours: int = 24
+    episodic_max_episodes: int = 50
 
 
 class ConfigLoader:
@@ -75,6 +87,12 @@ class ConfigLoader:
             reasoning_loop_enabled=payload.get("reasoning_loop_enabled", False),
             reasoning_loop_max_iterations=payload.get("reasoning_loop_max_iterations", 2),
             reasoning_loop_activation_threshold=payload.get("reasoning_loop_activation_threshold", 0.5),
+            llm_provider=payload.get("llm_provider", "ollama"),
+            llamacpp_base_url=payload.get("llamacpp_base_url", "http://localhost:8080"),
+            llamacpp_n_tokens=payload.get("llamacpp_n_tokens", 256),
+            episodic_max_exchanges=payload.get("episodic_max_exchanges", 10),
+            episodic_ttl_hours=payload.get("episodic_ttl_hours", 24),
+            episodic_max_episodes=payload.get("episodic_max_episodes", 50),
         )
 
     def validate(self, payload: dict[str, object]) -> None:

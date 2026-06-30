@@ -5,7 +5,7 @@ from pipeline.config.runtime import ConfigLoader
 from pipeline.contracts.models import PipelineResult, RequestEnvelope, SafeResponse, StageTrace
 from pipeline.stages.emotion_engine import HeuristicEmotionClassifier, SampleNLPEmotionModel
 from pipeline.stages.input_gateway import DefaultInputGateway
-from pipeline.stages.llm_client import LocalLLMClient
+from pipeline.stages.llm_client import LocalLLMClient, LlamaCppClient
 from pipeline.stages.memory_manager import DualMemoryManager
 from pipeline.stages.policy_engine import DeterministicPolicyEngine
 from pipeline.stages.prompt_builder import DefaultPromptBuilder
@@ -23,13 +23,7 @@ class EmotivePipeline:
         self.memory_manager = DualMemoryManager()
         self.policy_engine = DeterministicPolicyEngine()
         self.prompt_builder = DefaultPromptBuilder()
-        self.llm_client = LocalLLMClient(
-            model_name=self.config.model_name,
-            base_url=self.config.ollama_base_url,
-            timeout_seconds=self.config.request_timeout_seconds,
-            generate_path=self.config.ollama_generate_path,
-            stream=self.config.ollama_stream,
-        )
+        self.llm_client = self.build_llm_client()
         self.safety_processor = ProjectionSafetyProcessor()
         self.telemetry = JsonTelemetrySink(output_path=self.config.telemetry_path)
         self.reasoning_loop = ReasoningLoopOrchestrator(
@@ -45,6 +39,22 @@ class EmotivePipeline:
         if self.config.emotion_model_kind == "nlp_sample":
             return SampleNLPEmotionModel()
         return HeuristicEmotionClassifier()
+
+    def build_llm_client(self):
+        if self.config.llm_provider == "llamacpp":
+            return LlamaCppClient(
+                model_name=self.config.model_name,
+                base_url=self.config.llamacpp_base_url,
+                timeout_seconds=self.config.request_timeout_seconds,
+                n_tokens=self.config.llamacpp_n_tokens,
+            )
+        return LocalLLMClient(
+            model_name=self.config.model_name,
+            base_url=self.config.ollama_base_url,
+            timeout_seconds=self.config.request_timeout_seconds,
+            generate_path=self.config.ollama_generate_path,
+            stream=self.config.ollama_stream,
+        )
 
     def run(self, request: RequestEnvelope) -> PipelineResult:
         traces: list[StageTrace] = []
@@ -90,4 +100,12 @@ class EmotivePipeline:
 
         for trace in traces:
             self.telemetry.emit(trace.stage_name, trace.metadata | {"status": trace.status})
+
+        self.memory_manager.record_exchange(
+            user_id=request.user_id,
+            user_input=request.user_input,
+            response=safe.text,
+            emotion_state=emotion,
+        )
+
         return PipelineResult(request_id=request.request_id, response=safe, traces=traces)

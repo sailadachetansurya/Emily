@@ -39,27 +39,13 @@ OVERVIEW = """
 </div>
 
 <div class="section">
+  <div class="section-label">System readiness</div>
   <div class="card">
-    <div class="status-row">
-      <div class="status-item">
-        <div class="status-value"><span class="pulse-dot active"></span>Ready</div>
-        <div class="status-label">Pipeline</div>
-      </div>
-      <div class="status-divider"></div>
-      <div class="status-item">
-        <div class="status-value" id="jobCount">0</div>
-        <div class="status-label">Jobs run</div>
-      </div>
-      <div class="status-divider"></div>
-      <div class="status-item">
-        <div class="status-value" id="reasoningStatus">Off</div>
-        <div class="status-label">Reasoning loop</div>
-      </div>
-      <div class="status-divider"></div>
-      <div class="status-item">
-        <div class="status-value" id="modelStatus">&mdash;</div>
-        <div class="status-label">Emotion model</div>
-      </div>
+    <div id="healthGrid" class="health-grid">
+      <div class="empty">Checking models...</div>
+    </div>
+    <div class="btn-group" style="margin-top:12px">
+      <button class="btn btn-ghost" onclick="checkHealth()" style="font-size:0.7rem">Refresh</button>
     </div>
   </div>
 </div>
@@ -132,18 +118,23 @@ async function runTests() {
   if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
   addJob({ ...r, kind: 'test_suite' });
 }
-async function loadOverview() {
-  const cfg = await API.get('/api/config');
-  if (!cfg.error) {
-    document.getElementById('reasoningStatus').textContent = cfg.reasoning_loop_enabled ? 'On' : 'Off';
-  }
+async function checkHealth() {
+  const grid = document.getElementById('healthGrid');
   try {
-    const s = await fetch('/dataset/emotion_model.json');
-    document.getElementById('modelStatus').textContent = s.ok ? 'Trained' : 'Not found';
-  } catch { document.getElementById('modelStatus').textContent = '\u2014'; }
-  document.getElementById('jobCount').textContent = jobs.size;
+    const r = await API.get('/api/health');
+    grid.innerHTML = '';
+    for (const c of r.checks) {
+      const row = document.createElement('div');
+      row.className = 'health-row';
+      row.innerHTML =
+        `<div class="health-indicator ${c.status}"></div>` +
+        `<span class="health-name">${c.name}</span>` +
+        `<span class="health-detail">${c.detail}</span>`;
+      grid.appendChild(row);
+    }
+  } catch { grid.innerHTML = '<div class="empty">Could not reach server</div>'; }
 }
-loadOverview();
+checkHealth();
 </script>
 """
 

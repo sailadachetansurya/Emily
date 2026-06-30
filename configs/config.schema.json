@@ -25,6 +25,12 @@
     "max_emotional_items": { "type": "integer", "minimum": 1 },
     "reasoning_loop_enabled": { "type": "boolean" },
     "reasoning_loop_max_iterations": { "type": "integer", "minimum": 1 },
-    "reasoning_loop_activation_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+    "reasoning_loop_activation_threshold": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "llm_provider": { "type": "string", "enum": ["ollama", "llamacpp"] },
+    "llamacpp_base_url": { "type": "string", "minLength": 1 },
+    "llamacpp_n_tokens": { "type": "integer", "minimum": 1 },
+    "episodic_max_exchanges": { "type": "integer", "minimum": 1 },
+    "episodic_ttl_hours": { "type": "integer", "minimum": 1 },
+    "episodic_max_episodes": { "type": "integer", "minimum": 1 }
   }
 }

@@ -8,13 +8,14 @@ A modular emotive AI pipeline with deterministic policy control, internal reason
 User Input
   → Input Gateway (normalization)
   → Emotion Engine (heuristic + NLP perception)
-  → Dual Memory (factual + emotional stores)
+  → Dual Memory (factual + emotional + episodic stores)
   → Policy Engine (deterministic mode selection)
   → Prompt Builder (structured prompt assembly)
   → Reasoning Loop (optional self-critique, gated by emotional risk)
-  → LLM Client (local Ollama)
+  → LLM Client (Ollama or llama.cpp)
   → Safety Processor (speech-act pruning + fit-space projection)
   → Final Response
+  → Episodic Memory (exchange recording + distillation)
 ```
 
 ## Quick Start
@@ -99,12 +100,16 @@ Key fields in `configs/config.json`:
 
 | Field | Default | Description |
 |---|---|---|
-| `model_name` | `mistral` | Ollama model name |
+| `model_name` | `mistral` | Model name for LLM provider |
+| `llm_provider` | `ollama` | `ollama` or `llamacpp` |
 | `ollama_base_url` | `http://localhost:11434` | Ollama endpoint |
+| `llamacpp_base_url` | `http://localhost:8080` | llama.cpp endpoint |
 | `emotion_model_kind` | `heuristic` | `heuristic` or `nlp_sample` |
 | `reasoning_loop_enabled` | `false` | Enable self-critique loop |
 | `reasoning_loop_max_iterations` | `2` | Max critique-regen cycles |
 | `reasoning_loop_activation_threshold` | `0.5` | Emotional risk to trigger loop |
+| `episodic_max_exchanges` | `10` | Exchanges before episode distillation |
+| `episodic_ttl_hours` | `24` | Hours before new episode starts |
 
 ## Themes
 

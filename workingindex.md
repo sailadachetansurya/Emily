@@ -282,3 +282,60 @@ A point-by-point record of everything implemented in this project.
 - `Job.duration_ms` — elapsed time in milliseconds
 - All three fields serialized in API responses and displayed in the job list
 - `_run_job()` uses `finally` block to guarantee timing is captured even on failure
+
+---
+
+## 21. llama.cpp Client (Ollama Alternative)
+
+**Files:** `src/pipeline/stages/llm_client/llamacpp_client.py`, `src/pipeline/orchestrator/pipeline.py`
+
+- `LlamaCppClient` — HTTP client for llama.cpp's OpenAI-compatible API (`/v1/chat/completions`)
+- Same interface as `LocalLLMClient` — implements `generate(PromptBundle) -> GenerationResult`
+- Converts `PromptBundle` to OpenAI chat messages format (system + context + constraints + user)
+- Config: `llm_provider` (`ollama` | `llamacpp`), `llamacpp_base_url`, `llamacpp_n_tokens`
+- Pipeline selects client via `build_llm_client()` based on `config.llm_provider`
+- Health endpoint checks both Ollama and llama.cpp, reports which is active
+
+---
+
+## 22. Episodic Memory
+
+**Files:** `src/pipeline/stages/memory_manager/episodic_memory.py`, `src/pipeline/stages/memory_manager/memory_resolver.py`
+
+- `EpisodicMemoryStore` — stores user exchanges as episodes with facts and distilled summaries
+- `Exchange` dataclass — user_input, response, timestamp, emotion_snapshot
+- `Episode` dataclass — episode_id, user_id, exchanges list, facts list, distilled_summary
+- **Recording**: after each pipeline run, `DualMemoryManager.record_exchange()` stores the exchange
+- **Fact extraction**: personal markers ("my name is", "i work", "i feel", etc.) extracted from user input
+- **Auto-distillation**: after `episodic_max_exchanges` (default 10) exchanges, episode is compressed:
+  - Keeps facts mentioned more than once or all if few facts
+  - Generates distilled summary from kept facts
+  - Clears raw exchanges (saves memory)
+- **Episode TTL**: new episode starts after `episodic_ttl_hours` (default 24) hours
+- **Context resolution**: `get_context_summary()` returns last 3 episodes' summaries for prompt injection
+- **Fact merging**: episodic facts merged with factual memory in `MemoryContext`
+- Config: `episodic_max_exchanges`, `episodic_ttl_hours`, `episodic_max_episodes`
+
+---
+
+## 23. Model Readiness Dashboard
+
+**Files:** `server.py` (`GET /api/health`), `templates/pages.py`, `static/styles.css`
+
+- Health endpoint checks all pipeline components: Heuristic Emotion, NLP Emotion, Trained Model, Ollama, llama.cpp, Reasoning Loop
+- Reports status: ready, offline, missing, disabled, wrong_model, blocked
+- Overview page shows health grid with status indicators and details
+- Active LLM provider highlighted based on `llm_provider` config
+
+---
+
+## 24. Stage Progress Tracking
+
+**Files:** `src/pipeline/orchestrator/pipeline.py`, `server.py`, `templates/pages.py`, `static/styles.css`, `static/app.js`
+
+- Pipeline accepts `stage_callback` — called before each stage with stage name
+- Job tracks `current_stage` and `stages_completed` in real-time
+- Frontend polls job status and updates animated stage progress visualization
+- 7-stage visual tracker: Input → Emotion → Memory → Policy → Prompt → LLM → Safety
+- Steps transition: pending (gray) → active (pulsing) → done (filled) → failed (red)
+- Auto-hides 3 seconds after completion

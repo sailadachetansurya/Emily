@@ -300,6 +300,72 @@ async def api_tests_run():
     return _job_to_dict(job)
 
 
+@app.get("/api/health")
+async def api_health():
+    import urllib.request as _req
+    checks = []
+
+    config_path = ROOT / "configs" / "config.json"
+    config = {}
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+
+    provider = config.get("llm_provider", "ollama")
+    model_name = config.get("model_name", "mistral")
+
+    checks.append({"name": "Heuristic Emotion", "status": "ready", "detail": "Pure Python, no dependencies"})
+    checks.append({"name": "NLP Emotion Model", "status": "ready", "detail": "SampleNLPEmotionModel, always available"})
+
+    model_path = ROOT / "models" / "emotion_model.json"
+    if model_path.exists():
+        checks.append({"name": "Trained Emotion Model", "status": "ready", "detail": str(model_path)})
+    else:
+        checks.append({"name": "Trained Emotion Model", "status": "missing", "detail": "Not found. Run training first."})
+
+    # Check Ollama
+    ollama_url = config.get("ollama_base_url", "http://localhost:11434")
+    ollama_ok = False
+    try:
+        r = _req.Request(f"{ollama_url}/api/tags", method="GET")
+        with _req.urlopen(r, timeout=3) as resp:
+            data = json.loads(resp.read())
+            models = [m.get("name", "") for m in data.get("models", [])]
+            if any(model_name in m for m in models):
+                checks.append({"name": f"Ollama ({model_name})", "status": "ready", "detail": f"Endpoint: {ollama_url}"})
+                ollama_ok = True
+            else:
+                checks.append({"name": f"Ollama ({model_name})", "status": "wrong_model", "detail": f"Available: {', '.join(models) or 'none'}"})
+    except Exception:
+        checks.append({"name": f"Ollama ({model_name})", "status": "offline", "detail": f"Cannot reach {ollama_url}"})
+
+    # Check llama.cpp
+    llamacpp_url = config.get("llamacpp_base_url", "http://localhost:8080")
+    llamacpp_ok = False
+    try:
+        r = _req.Request(f"{llamacpp_url}/health", method="GET")
+        with _req.urlopen(r, timeout=3) as resp:
+            llamacpp_ok = resp.status == 200
+            checks.append({"name": f"llama.cpp", "status": "ready", "detail": f"Endpoint: {llamacpp_url}"})
+    except Exception:
+        checks.append({"name": f"llama.cpp", "status": "offline", "detail": f"Cannot reach {llamacpp_url}"})
+
+    ollama_reachable = ollama_ok or any(c["name"].startswith("Ollama") and c["status"] == "wrong_model" for c in checks)
+    llamacpp_reachable = llamacpp_ok
+    provider_reachable = ollama_reachable if provider == "ollama" else llamacpp_reachable
+
+    rl_enabled = config.get("reasoning_loop_enabled", False)
+    if not rl_enabled:
+        checks.append({"name": "Reasoning Loop", "status": "disabled", "detail": "Set reasoning_loop_enabled=true"})
+    elif provider_reachable and not ollama_ok and provider == "ollama":
+        checks.append({"name": "Reasoning Loop", "status": "blocked", "detail": f"Ollama running but model '{model_name}' not installed. Change model_name in config.json."})
+    elif provider_reachable:
+        checks.append({"name": "Reasoning Loop", "status": "ready", "detail": f"Using {provider}"})
+    else:
+        checks.append({"name": "Reasoning Loop", "status": "blocked", "detail": f"Enabled but {provider} is offline"})
+
+    return {"checks": checks}
+
+
 @app.get("/api/jobs")
 async def api_jobs_list():
     return {"jobs": [_job_to_dict(j) for j in _jobs.values()]}
