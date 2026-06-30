@@ -23,23 +23,22 @@ const API = {
   },
 };
 
-/* ── Toast ─────────────────────────────────────────────────── */
-function showToast(msg) {
+/* ── Notifications ─────────────────────────────────────────── */
+function notify(msg, type) {
   const el = document.createElement('div');
-  el.className = 'toast';
+  el.className = 'toast' + (type ? ' toast-' + type : '');
   el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2500);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
 }
 
-/* ── Copy to clipboard ─────────────────────────────────────── */
 function copyOutput(elId) {
   const el = document.getElementById(elId);
   if (!el || !el.textContent.trim()) return;
-  navigator.clipboard.writeText(el.textContent).then(() => showToast('Copied'));
+  navigator.clipboard.writeText(el.textContent).then(() => notify('Copied', 'ok'));
 }
 
-/* ── Time ago ──────────────────────────────────────────────── */
+/* ── Time helpers ──────────────────────────────────────────── */
 function timeAgo(iso) {
   if (!iso) return '';
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -50,43 +49,43 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-/* ── Job persistence ───────────────────────────────────────── */
-const JOB_STORAGE_KEY = 'emily-jobs';
-const jobs = new Map();
-
-function loadJobsFromStorage() {
-  try {
-    const raw = localStorage.getItem(JOB_STORAGE_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      arr.forEach(j => {
-        if (j.status === 'running') j.status = 'stale';
-        jobs.set(j.job_id, j);
-      });
-    }
-  } catch { /* ignore */ }
+function localTime(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
 }
 
-function saveJobsToStorage() {
-  localStorage.setItem(JOB_STORAGE_KEY, JSON.stringify([...jobs.values()]));
+/* ── Job persistence ───────────────────────────────────────── */
+const JOB_KEY = 'emily-jobs';
+const jobs = new Map();
+
+function loadJobs() {
+  try {
+    const raw = localStorage.getItem(JOB_KEY);
+    if (raw) JSON.parse(raw).forEach(j => { if (j.status === 'running') j.status = 'stale'; jobs.set(j.job_id, j); });
+  } catch {}
+}
+
+function saveJobs() {
+  localStorage.setItem(JOB_KEY, JSON.stringify([...jobs.values()]));
 }
 
 function addJob(job) {
   jobs.set(job.job_id, job);
-  saveJobsToStorage();
+  saveJobs();
   renderJobs();
   if (job.status === 'running') pollJob(job.job_id);
 }
 
-function updateJob(data) {
-  const existing = jobs.get(data.job_id);
-  if (existing) Object.assign(existing, data);
+function mergeJob(data) {
+  const ex = jobs.get(data.job_id);
+  if (ex) Object.assign(ex, data);
   else jobs.set(data.job_id, data);
-  saveJobsToStorage();
+  saveJobs();
   renderJobs();
 }
 
-async function syncJobsFromServer() {
+async function syncFromServer() {
   try {
     const r = await API.get('/api/jobs');
     if (r.jobs) {
@@ -95,11 +94,11 @@ async function syncJobsFromServer() {
         if (!local) jobs.set(sj.job_id, sj);
         else if (sj.status !== 'running' && local.status === 'running') Object.assign(local, sj);
       }
-      saveJobsToStorage();
+      saveJobs();
       renderJobs();
       for (const [, j] of jobs) if (j.status === 'running') pollJob(j.job_id);
     }
-  } catch { /* server might not be ready */ }
+  } catch {}
 }
 
 /* ── Job rendering ─────────────────────────────────────────── */
@@ -117,70 +116,58 @@ function renderJobs() {
     const d = document.createElement('div');
     d.className = 'job-item';
     const dur = j.duration_ms ? ` (${j.duration_ms}ms)` : '';
-    const ago = j.finished_at ? timeAgo(j.finished_at) : (j.started_at ? timeAgo(j.started_at) : '');
+    const time = localTime(j.finished_at || j.started_at);
+    const ago = j.finished_at ? timeAgo(j.finished_at) : '';
     d.innerHTML =
       `<span class="job-id">${j.job_id}</span>` +
-      `<span class="job-kind">${formatJobKind(j.kind)}${dur}</span>` +
+      `<span class="job-kind">${fmtKind(j.kind)}${dur}</span>` +
       `<span class="job-status ${j.status}">${j.status}</span>` +
-      `<span class="job-time" style="font-size:0.6rem;color:var(--silver);min-width:50px;text-align:right">${ago}</span>`;
+      `<span class="job-time" style="font-size:0.6rem;color:var(--silver);min-width:80px;text-align:right">${time}${ago ? ' (' + ago + ')' : ''}</span>`;
     el.appendChild(d);
   }
-  document.getElementById('jobCount').textContent = jobs.size;
+  const cnt = document.getElementById('jobCount');
+  if (cnt) cnt.textContent = jobs.size;
 }
 
-function formatJobKind(kind) {
-  const map = { run_pipeline: 'Pipeline', prepare_dataset: 'Dataset', train_model: 'Training', test_suite: 'Tests' };
-  return map[kind] || kind;
+function fmtKind(k) {
+  return { run_pipeline: 'Pipeline', prepare_dataset: 'Dataset', train_model: 'Training', test_suite: 'Tests' }[k] || k;
 }
 
 /* ── Stage progress ────────────────────────────────────────── */
-function resetStageProgress() {
+function resetStages() {
   document.querySelectorAll('.stage-progress').forEach(el => {
     el.classList.add('visible');
-    el.querySelectorAll('.stage-step').forEach(s => {
-      s.classList.remove('done', 'active', 'failed');
-    });
+    el.querySelectorAll('.stage-step').forEach(s => s.classList.remove('done', 'active', 'failed'));
     el.querySelectorAll('.stage-line').forEach(l => l.classList.remove('done'));
-    const label = el.querySelector('.stage-label');
-    if (label) label.textContent = 'Starting...';
+    const lbl = el.querySelector('.stage-label');
+    if (lbl) lbl.textContent = 'Starting...';
   });
 }
 
-function updateStageProgress(currentStage, stagesCompleted) {
-  document.querySelectorAll('.stage-progress').forEach(container => {
-    container.classList.add('visible');
-    const steps = container.querySelectorAll('.stage-step');
-    const lines = container.querySelectorAll('.stage-line');
-    steps.forEach(step => {
-      const stage = step.dataset.stage;
-      const idx = STAGE_ORDER.indexOf(stage);
-      const doneIdx = (stagesCompleted || []).indexOf(stage);
-      const currentIdx = STAGE_ORDER.indexOf(currentStage);
-      step.classList.remove('done', 'active', 'failed');
-      if (doneIdx !== -1 || (currentStage && idx < currentIdx)) {
-        step.classList.add('done');
-      } else if (stage === currentStage) {
-        step.classList.add('active');
-      }
+function updateStages(current, done) {
+  document.querySelectorAll('.stage-progress').forEach(ct => {
+    ct.classList.add('visible');
+    const steps = ct.querySelectorAll('.stage-step');
+    const lines = ct.querySelectorAll('.stage-line');
+    steps.forEach(s => {
+      const idx = STAGE_ORDER.indexOf(s.dataset.stage);
+      const curIdx = STAGE_ORDER.indexOf(current);
+      s.classList.remove('done', 'active', 'failed');
+      if ((done || []).includes(s.dataset.stage) || (current && idx < curIdx)) s.classList.add('done');
+      else if (s.dataset.stage === current) s.classList.add('active');
     });
-    lines.forEach((line, i) => {
-      const stepBefore = steps[i];
-      line.classList.toggle('done', stepBefore?.classList.contains('done'));
-    });
-    const label = container.querySelector('.stage-label');
-    if (label && currentStage) {
-      const name = currentStage.replace(/_/g, ' ');
-      label.textContent = name.charAt(0).toUpperCase() + name.slice(1) + '...';
-    }
+    lines.forEach((l, i) => l.classList.toggle('done', steps[i]?.classList.contains('done')));
+    const lbl = ct.querySelector('.stage-label');
+    if (lbl && current) lbl.textContent = current.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + '...';
   });
 }
 
-function markStageFailed() {
-  document.querySelectorAll('.stage-progress').forEach(container => {
-    const active = container.querySelector('.stage-step.active');
-    if (active) active.classList.add('failed');
-    const label = container.querySelector('.stage-label');
-    if (label) label.textContent = 'Failed';
+function markFailed() {
+  document.querySelectorAll('.stage-progress').forEach(ct => {
+    const a = ct.querySelector('.stage-step.active');
+    if (a) a.classList.add('failed');
+    const lbl = ct.querySelector('.stage-label');
+    if (lbl) lbl.textContent = 'Failed';
   });
 }
 
@@ -188,146 +175,128 @@ function markStageFailed() {
 async function pollJob(id) {
   try {
     const r = await API.get(`/api/jobs/${id}`);
-    updateJob(r);
+    mergeJob(r);
     if (r.status === 'running') {
-      if (r.current_stage) updateStageProgress(r.current_stage, r.stages_completed || []);
+      if (r.current_stage) updateStages(r.current_stage, r.stages_completed || []);
       setTimeout(() => pollJob(id), 500);
     } else {
-      if (r.status === 'failed') markStageFailed();
-      showJobResult(r);
-      setTimeout(() => {
-        document.querySelectorAll('.stage-progress').forEach(el => el.classList.remove('visible'));
-      }, 3000);
+      if (r.status === 'failed') markFailed();
+      showResult(r);
+      setTimeout(() => document.querySelectorAll('.stage-progress').forEach(el => el.classList.remove('visible')), 3000);
     }
   } catch (e) {
     const j = jobs.get(id);
-    if (j) { j.status = 'failed'; j.error = e.message; saveJobsToStorage(); renderJobs(); }
+    if (j) { j.status = 'failed'; j.error = e.message; saveJobs(); renderJobs(); }
+    notify('Poll failed: ' + e.message, 'err');
   }
 }
 
-function showJobResult(r) {
-  const outEl =
-    r.kind === 'run_pipeline' ? document.getElementById('pipelineOutput') || document.getElementById('quickOutput') :
-    r.kind === 'prepare_dataset' ? document.getElementById('datasetOutput') :
-    r.kind === 'train_model' ? document.getElementById('trainOutput') :
-    r.kind === 'test_suite' ? document.getElementById('testOutput') : null;
-  if (!outEl) return;
+function showResult(r) {
+  // Find output element — try all possible IDs
+  const el =
+    document.getElementById('pipelineOutput') ||
+    document.getElementById('quickOutput') ||
+    document.getElementById('datasetOutput') ||
+    document.getElementById('trainOutput') ||
+    document.getElementById('testOutput');
+  if (!el) return;
+
   if (r.status === 'completed') {
-    if (r.kind === 'test_suite' && r.result_data) {
+    if (r.kind === 'run_pipeline' && r.result_data && r.result_data.response) {
+      el.innerHTML = fmtPipeline(r);
+    } else if (r.kind === 'test_suite' && r.result_data && r.result_data.total) {
       const d = r.result_data;
-      outEl.textContent = `Tests: ${d.passed}/${d.total} passed` +
-        (d.failed ? ` | Failed: ${d.failed}` : '') +
-        (d.errors ? ` | Errors: ${d.errors}` : '') +
-        '\n\n' + (d.raw || r.output);
-    } else if (r.kind === 'run_pipeline' && r.result_data) {
-      outEl.innerHTML = formatPipelineResult(r);
+      el.textContent = `Tests: ${d.passed}/${d.total} passed\n\n${d.raw || r.output}`;
     } else {
-      outEl.textContent = r.output;
+      el.textContent = r.output || 'Completed';
     }
-    outEl.classList.remove('running', 'error');
+    el.classList.remove('running', 'error');
+    notify(`${fmtKind(r.kind)} completed${r.duration_ms ? ' in ' + r.duration_ms + 'ms' : ''}`, 'ok');
   } else {
-    outEl.innerHTML = formatError(r);
-    outEl.classList.remove('running');
-    outEl.classList.add('error');
+    el.innerHTML = fmtError(r);
+    el.classList.remove('running');
+    el.classList.add('error');
+    notify(`${fmtKind(r.kind)} failed`, 'err');
   }
 }
 
-function formatPipelineResult(r) {
+function fmtPipeline(r) {
   const d = r.result_data;
-  if (!d) return r.output || 'No output';
-  let html = '<div class="pipeline-result">';
-  html += `<div class="pr-response">${escHtml(d.response || 'No response')}</div>`;
+  let h = '<div class="pipeline-result">';
+  h += `<div class="pr-response">${esc(d.response || 'No response')}</div>`;
   if (d.raw_text && d.raw_text !== d.response) {
-    html += `<div class="pr-section"><span class="pr-label">Raw output (${d.pruning_method} pruning)</span>`;
-    html += `<div class="pr-note" style="font-style:italic">${escHtml(d.raw_text)}</div></div>`;
+    h += `<div class="pr-section"><span class="pr-label">Raw (${d.pruning_method})</span><div class="pr-note" style="font-style:italic">${esc(d.raw_text)}</div></div>`;
   }
-  if (d.safety_notes && d.safety_notes.length) {
-    html += '<div class="pr-section"><span class="pr-label">Safety notes</span>';
-    d.safety_notes.forEach(n => html += `<div class="pr-note">${escHtml(n)}</div>`);
-    html += '</div>';
+  if (d.safety_notes?.length) {
+    h += '<div class="pr-section"><span class="pr-label">Safety</span>';
+    d.safety_notes.forEach(n => h += `<div class="pr-note">${esc(n)}</div>`);
+    h += '</div>';
   }
-  if (d.traces && d.traces.length) {
-    html += '<div class="pr-section"><span class="pr-label">Pipeline stages</span><div class="pr-stages">';
-    d.traces.forEach(t => {
-      html += `<span class="pr-stage ${t.status}">${t.stage}</span>`;
-    });
-    html += '</div></div>';
+  if (d.traces?.length) {
+    h += '<div class="pr-section"><span class="pr-label">Stages</span><div class="pr-stages">';
+    d.traces.forEach(t => h += `<span class="pr-stage ${t.status}">${t.stage}</span>`);
+    h += '</div></div>';
   }
-  const dur = r.duration_ms ? `<span class="pr-section" style="display:block;margin-top:6px;font-size:0.65rem;color:var(--silver)">Completed in ${r.duration_ms}ms</span>` : '';
-  html += dur;
-  html += '</div>';
-  return html;
+  if (r.duration_ms) h += `<div style="font-size:0.6rem;color:var(--silver);margin-top:6px">${r.duration_ms}ms</div>`;
+  h += '</div>';
+  return h;
 }
 
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+function fmtError(r) {
+  if (!r.error_detail) return `Error: ${r.error || 'Unknown'}`;
+  const d = r.error_detail;
+  let h = `<span class="err-type">${d.error_type}</span>`;
+  if (d.stage) h += ` <span class="err-stage">[${d.stage}]</span>`;
+  if (d.part) h += `::<span class="err-part">${d.part}</span>`;
+  h += `\n${d.detail}`;
+  if (d.hint) h += `\nHint: ${d.hint}`;
+  return h;
 }
 
-/* ── Error formatting ──────────────────────────────────────── */
-function formatError(job) {
-  if (!job.error_detail) return `Error: ${job.error || 'Unknown error'}`;
-  const d = job.error_detail;
-  let html = `<span class="err-type">${d.error_type}</span>`;
-  if (d.stage) html += ` <span class="err-stage">[${d.stage}]</span>`;
-  if (d.part) html += `::<span class="err-part">${d.part}</span>`;
-  html += `\n${d.detail}`;
-  if (d.hint) html += `\nHint: ${d.hint}`;
-  return html;
-}
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-/* ── Toggle helper ────────────────────────────────────────── */
-function initToggles() {
-  document.querySelectorAll('.toggle[data-key]').forEach(el => {
-    el.addEventListener('click', async () => {
-      const isOn = el.classList.toggle('on');
-      await API.post('/api/config', { [el.dataset.key]: isOn });
-    });
-  });
-}
-
-/* ── Config helpers ───────────────────────────────────────── */
+/* ── Config helpers ────────────────────────────────────────── */
 async function loadConfig() {
   const r = await API.get('/api/config');
   if (r.error) return;
   document.querySelectorAll('[data-config-key]').forEach(el => {
-    const key = el.dataset.configKey;
-    if (r[key] !== undefined) {
-      if (el.classList.contains('toggle')) el.classList.toggle('on', !!r[key]);
-      else el.value = r[key];
+    const k = el.dataset.configKey;
+    if (r[k] !== undefined) {
+      if (el.classList.contains('toggle')) el.classList.toggle('on', !!r[k]);
+      else el.value = r[k];
     }
   });
   return r;
 }
 
 async function saveConfig() {
-  const update = {};
+  const u = {};
   document.querySelectorAll('[data-config-key]').forEach(el => {
-    const key = el.dataset.configKey;
-    let val;
-    if (el.classList.contains('toggle')) val = el.classList.contains('on');
-    else {
-      val = el.value;
-      if (val === 'true') val = true;
-      else if (val === 'false') val = false;
-      else if (!isNaN(val) && val !== '') val = Number(val);
-    }
-    update[key] = val;
+    const k = el.dataset.configKey;
+    let v;
+    if (el.classList.contains('toggle')) v = el.classList.contains('on');
+    else { v = el.value; if (v === 'true') v = true; else if (v === 'false') v = false; else if (!isNaN(v) && v !== '') v = Number(v); }
+    u[k] = v;
   });
-  await API.post('/api/config', update);
+  await API.post('/api/config', u);
 }
 
-/* ── Sidebar active state ─────────────────────────────────── */
+function initToggles() {
+  document.querySelectorAll('.toggle[data-key]').forEach(el => {
+    el.addEventListener('click', async () => {
+      el.classList.toggle('on');
+      await API.post('/api/config', { [el.dataset.key]: el.classList.contains('on') });
+    });
+  });
+}
+
+/* ── Nav + Theme ───────────────────────────────────────────── */
 function initNav() {
-  const path = location.pathname;
-  document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.getAttribute('href') === path) link.classList.add('active');
-  });
+  const p = location.pathname;
+  document.querySelectorAll('.nav-link').forEach(l => { if (l.getAttribute('href') === p) l.classList.add('active'); });
 }
 
-/* ── Theme switching ──────────────────────────────────────── */
-function getStoredTheme() { return localStorage.getItem('emily-theme') || 'minimalist'; }
+function getTheme() { return localStorage.getItem('emily-theme') || 'minimalist'; }
 
 function applyTheme(id) {
   document.body.className = '';
@@ -337,16 +306,16 @@ function applyTheme(id) {
 }
 
 function initThemes() {
-  applyTheme(getStoredTheme());
+  applyTheme(getTheme());
   document.querySelectorAll('.theme-card').forEach(c => c.addEventListener('click', () => applyTheme(c.dataset.theme)));
 }
 
-/* ── Init ─────────────────────────────────────────────────── */
+/* ── Init ──────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initToggles();
   initThemes();
-  loadJobsFromStorage();
+  loadJobs();
   renderJobs();
-  syncJobsFromServer();
+  syncFromServer();
 });

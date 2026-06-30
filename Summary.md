@@ -80,3 +80,93 @@
 | output_pruning | ok |
 
 ---
+
+## Pipeline Run — 2026-06-30 11:46:24 UTC
+
+**Input:** ive been taking or milligrams or times recommended amount and ive fallen asleep a lot faster but i also feel like so funny
+
+**Response:** That sounds heavy. I am here with you. Do you want to share what feels most present right now?
+
+**Stages (7):**
+
+| Stage | Status |
+|---|---|
+| input_gateway | ok |
+| emotion_perception | ok |
+| dual_memory | ok |
+| policy_mapper | ok |
+| prompt_constructor | ok |
+| llm_generation | ok |
+| output_pruning | ok |
+
+---
+
+## Pipeline Run — 2026-06-30 12:17:28 UTC
+
+**Input:** i explain why i clung to a relationship with a boy who was in many ways immature and uncommitted despite the excitement i should have been feeling for getting accepted into the masters program at the university of virginia
+
+**Response:** That sounds heavy. I am here with you. Do you want to share what feels most present right now?
+
+**Stages (7):**
+
+| Stage | Status |
+|---|---|
+| input_gateway | ok |
+| emotion_perception | ok |
+| dual_memory | ok |
+| policy_mapper | ok |
+| prompt_constructor | ok |
+| llm_generation | ok |
+| output_pruning | ok |
+
+---
+
+## Pipeline Run — 2026-06-30 12:18:49 UTC
+
+**Input:** I have been feeling lonely and anxious lately.
+
+**Response:** That sounds heavy. I am here with you. Do you want to share what feels most present right now?
+
+**Safety notes:**
+
+- LLM pruned output still has speech act 'question'
+
+**Stages (8):**
+
+| Stage | Status |
+|---|---|
+| input_gateway | ok |
+| emotion_perception | ok |
+| dual_memory | ok |
+| policy_mapper | ok |
+| prompt_constructor | ok |
+| reasoning_loop | ok |
+| llm_generation | ok |
+| output_pruning | ok |
+
+---
+
+## Pipeline Run — 2026-06-30 12:19:34 UTC
+
+**Input:** I have been feeling lonely and anxious lately.
+
+**Response:** That sounds heavy. I am here with you. Do you want to share what feels most present right now?
+
+**Safety notes:**
+
+- LLM pruned output still has speech act 'question'
+
+**Stages (8):**
+
+| Stage | Status |
+|---|---|
+| input_gateway | ok |
+| emotion_perception | ok |
+| dual_memory | ok |
+| policy_mapper | ok |
+| prompt_constructor | ok |
+| reasoning_loop | ok |
+| llm_generation | ok |
+| output_pruning | ok |
+
+---

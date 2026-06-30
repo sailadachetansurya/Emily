@@ -251,9 +251,10 @@ tr:last-child td{border-bottom:none}
 .toast{
   position:fixed;bottom:24px;right:24px;padding:10px 16px;
   background:var(--charcoal);color:var(--white);font-size:0.75rem;
-  border-radius:4px;z-index:100;animation:toastIn 0.3s ease-out;
+  border-radius:4px;z-index:100;transition:opacity 0.3s;
 }
-@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.toast-ok{background:#2d8b50}
+.toast-err{background:#b04040}
 
 /* ── Fade in ──────────────────────────────────────────────── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}

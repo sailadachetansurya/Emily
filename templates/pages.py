@@ -132,7 +132,7 @@ async function checkHealth() {
         `<span class="health-detail">${c.detail}</span>`;
       grid.appendChild(row);
     }
-  } catch { grid.innerHTML = '<div class="empty">Could not reach server</div>'; }
+  } catch { grid.innerHTML = '<div class="empty">Could not reach server.Please Refresh...</div>'; }
 }
 checkHealth();
 </script>
@@ -409,16 +409,31 @@ LOGS = """
 async function loadTelemetry() {
   const el = document.getElementById('logOutput');
   el.textContent = 'Loading...';
-  const r = await API.get('/api/telemetry?lines=100');
+  const r = await API.get('/api/telemetry?lines=200');
   if (!r.entries || !r.entries.length) {
     el.textContent = 'No telemetry entries yet.';
     return;
   }
   el.innerHTML = r.entries.map(e => {
-    const ts = e.timestamp ? e.timestamp.split('T')[1]?.split('.')[0] || '' : '';
+    let ts = '';
+    try { ts = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch { ts = ''; }
     const name = e.trace_name || '';
     const status = e.payload?.status || '';
-    return `<div class="log-entry"><span class="log-time">${ts}</span><span class="log-stage">${name}</span> ${status}</div>`;
+    let detail = '';
+    if (name === 'emotion_perception' && e.payload?.emotion) {
+      const em = e.payload.emotion;
+      detail = ` v=${em.emotional_valence} act=${em.activation_level} stab=${em.stability}`;
+    } else if (name === 'policy_mapper' && e.payload?.policy) {
+      detail = ` mode=${e.payload.policy.mode} risk=${e.payload.scores?.emotional_risk}`;
+    } else if (name === 'reasoning_loop' && e.payload) {
+      detail = ` activated=${e.payload.activated} iters=${e.payload.iterations}`;
+    } else if (name === 'llm_generation' && e.payload?.generation?.metadata) {
+      const m = e.payload.generation.metadata;
+      detail = ` provider=${m.provider} model=${m.model}`;
+    } else if (name === 'output_pruning' && e.payload?.response) {
+      detail = ` method=${e.payload.response.pruning_method || 'python'}`;
+    }
+    return `<div class="log-entry"><span class="log-time">${ts}</span><span class="log-stage">${name}</span> <span style="color:var(--charcoal)">${status}</span>${detail ? '<span style="color:var(--slate);margin-left:8px">' + detail + '</span>' : ''}</div>`;
   }).join('');
   el.scrollTop = el.scrollHeight;
 }
