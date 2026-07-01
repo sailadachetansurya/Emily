@@ -37,7 +37,7 @@ All code under `src/pipeline/` belongs to this doc.
 - `stages/policy_engine/` — Deterministic policy selection (single file, no child doc needed)
 - `stages/prompt_builder/` — Prompt assembly (single file, no child doc needed)
 - `stages/safety_processor/` — Output pruning and speech-act validation (single file, no child doc needed)
-- `stages/llm_client/` — Local Ollama-compatible client (single file + contracts, no child doc needed)
+- `stages/llm_client/` — Pluggable LLM backends (Ollama, llama.cpp) behind abstract `LLMClient` protocol
 - `config/` — Runtime configuration and validation (single file + errors, no child doc needed)
 - `contracts/` — Shared models and protocol interfaces (no child doc needed)
 - `evaluation/` — Evaluation harness (single file, no child doc needed)

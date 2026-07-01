@@ -262,8 +262,22 @@ async function loadConfig() {
   document.querySelectorAll('[data-config-key]').forEach(el => {
     const k = el.dataset.configKey;
     if (r[k] !== undefined) {
-      if (el.classList.contains('toggle')) el.classList.toggle('on', !!r[k]);
-      else el.value = r[k];
+      if (el.classList.contains('toggle')) {
+        el.classList.toggle('on', !!r[k]);
+      } else if (el.tagName === 'SELECT') {
+        const v = String(r[k]);
+        let found = false;
+        for (const opt of el.options) {
+          if (opt.value === v) { opt.selected = true; found = true; break; }
+        }
+        if (!found && el.options.length > 0) {
+          el.options[0].value = v;
+          el.options[0].textContent = v + ' (custom)';
+          el.options[0].selected = true;
+        }
+      } else {
+        el.value = r[k];
+      }
     }
   });
   return r;
@@ -274,8 +288,19 @@ async function saveConfig() {
   document.querySelectorAll('[data-config-key]').forEach(el => {
     const k = el.dataset.configKey;
     let v;
-    if (el.classList.contains('toggle')) v = el.classList.contains('on');
-    else { v = el.value; if (v === 'true') v = true; else if (v === 'false') v = false; else if (!isNaN(v) && v !== '') v = Number(v); }
+    if (el.classList.contains('toggle')) {
+      v = el.classList.contains('on');
+    } else if (el.tagName === 'SELECT') {
+      v = el.value;
+      if (v === 'true') v = true;
+      else if (v === 'false') v = false;
+      else if (!isNaN(v) && v !== '') v = Number(v);
+    } else {
+      v = el.value;
+      if (v === 'true') v = true;
+      else if (v === 'false') v = false;
+      else if (!isNaN(v) && v !== '') v = Number(v);
+    }
     u[k] = v;
   });
   await API.post('/api/config', u);

@@ -89,6 +89,12 @@ textarea,input[type=text],input[type=number],select{
 }
 textarea:focus,input:focus,select:focus{border-color:var(--charcoal)}
 textarea{resize:vertical;min-height:100px}
+select{
+  width:100%;font-family:var(--font-body);font-size:0.82rem;
+  padding:10px 12px;border:1px solid var(--pearl);background:var(--mist);
+  color:var(--ink);outline:none;transition:border-color 0.2s;
+  cursor:pointer;appearance:auto;
+}
 .field-row{margin-bottom:16px}
 .field-hint{font-size:0.65rem;color:var(--silver);margin-top:4px}
 

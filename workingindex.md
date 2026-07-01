@@ -339,3 +339,62 @@ A point-by-point record of everything implemented in this project.
 - 7-stage visual tracker: Input → Emotion → Memory → Policy → Prompt → LLM → Safety
 - Steps transition: pending (gray) → active (pulsing) → done (filled) → failed (red)
 - Auto-hides 3 seconds after completion
+
+---
+
+## 25. LLM Abstraction Refactoring
+
+**Files:** `src/pipeline/contracts/interfaces.py`, `src/pipeline/orchestrator/pipeline.py`, `src/pipeline/stages/reasoning_loop/orchestrator.py`, `src/pipeline/stages/reasoning_loop/critic.py`, `src/pipeline/stages/safety_processor/response_guard.py`, `src/pipeline/stages/llm_client/llamacpp_client.py`
+
+- `LLMClient` protocol in `contracts/interfaces.py` defines the abstract interface: `generate()` and `fallback_generation()`
+- Pipeline no longer imports concrete LLM classes at module level — `build_llm_client()` does local imports inside the method
+- `ReasoningLoopOrchestrator` and `PolicyCritiqueEvaluator` accept `LLMClient` protocol, not `LocalLLMClient`
+- `AdaptiveSafetyProcessor` and `LLMOutputPruner` accept `LLMClient` protocol
+- `LlamaCppClient` now implements `fallback_generation()` to satisfy the protocol
+- Concrete classes (`LocalLLMClient`, `LlamaCppClient`) are only imported in the factory method
+- Switching backends requires only changing `llm_provider` in config — zero code changes in pipeline logic
+
+---
+
+## 26. EmotionDialogue Dataset Parser Fix
+
+**Files:** `src/pipeline/stages/emotion_engine/dataset_prep.py`
+
+- **Problem**: Alignment-Lab-AI/EmotionDialogue dataset has no separate `emotion`/`label` field — the label is embedded as a prefix in the system message (e.g., `"guilty: I felt guilty..."`)
+- **Fix**: Parser now extracts label from system message when no top-level label exists
+- **Fix**: User text extracted from `human`/`user` conversation turns when no top-level text exists
+- **Fix**: Label prefix stripped from extracted text
+- **Fix**: 33 emotion synonyms added to map dataset labels to canonical categories
+- **Result**: 23,149 rows extracted (was 0), covering joy, sadness, anger, fear, neutral, surprise
+
+---
+
+## 27. Frontend Regression Fixes
+
+**Files:** `templates/pages.py`, `static/app.js`, `static/styles.css`
+
+### Overview Page
+- Added status row with Pipeline status, Jobs tracked, Last run, and Dataset summary
+- `loadOverviewSummary()` auto-fetches dataset row count and last job time on page load
+- Health grid auto-refreshes on page load via `checkHealth()`
+- Removed redundant manual Refresh button (auto-loads now)
+
+### Logs Page
+- Added `try/catch` around `loadTelemetry()` API call — was getting stuck on "Loading..." when the fetch failed silently
+- Error message now shown instead of infinite loading state
+
+### Training/Datasets Page
+- Added `try/catch` around `prepareDataset()` and `trainModel()` — errors were unhandled
+- Improved empty state message: "No dataset summary found. Run **Prepare dataset** first."
+
+### Settings Page — Dropdown Menus
+- Added `CONFIG_OPTIONS` map with common values for known fields:
+  - `llm_provider`: ollama, llamacpp
+  - `model_name`: mistral, deepseek-r1:8b, llama2, qwen3.5:4b, wizardlm
+  - `emotion_model_kind`: heuristic, nlp_sample
+  - `output_pruning_mode`: python, llm, off
+  - Numeric fields: timeout, memory limits, thresholds, episode config
+- Boolean fields (`ollama_stream`, `reasoning_loop_enabled`) render as toggle switches
+- Custom values preserved as "(custom)" option in dropdown
+- `saveConfig()` updated to handle `<select>`, `<input>`, and `.toggle` elements
+- `loadConfig()` updated to sync select elements with current values

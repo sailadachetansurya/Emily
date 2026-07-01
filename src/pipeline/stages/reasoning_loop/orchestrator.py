@@ -4,8 +4,8 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from pipeline.contracts.interfaces import LLMClient
 from pipeline.contracts.models import GenerationResult, PromptBundle, ResponsePolicy
-from pipeline.stages.llm_client import LocalLLMClient
 
 from .critic import PolicyCritiqueEvaluator
 from .models import CritiqueResult, IterationRecord, ReasoningTrace
@@ -27,7 +27,7 @@ class ReasoningLoopConfig:
 
 
 class ReasoningLoopOrchestrator:
-    def __init__(self, llm_client: LocalLLMClient, config: ReasoningLoopConfig) -> None:
+    def __init__(self, llm_client: LLMClient, config: ReasoningLoopConfig) -> None:
         self.llm_client = llm_client
         self.config = config
         self.critic = PolicyCritiqueEvaluator(

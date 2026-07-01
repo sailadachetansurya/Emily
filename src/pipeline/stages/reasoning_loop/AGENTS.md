@@ -20,7 +20,7 @@ All files in `src/pipeline/stages/reasoning_loop/` belong to this doc.
 
 ## Work Guidance
 
-- All LLM calls in this stage use the existing `LocalLLMClient` — no new providers
+- All LLM calls in this stage use the abstract `LLMClient` protocol — no concrete backend dependency
 - The `process()` method returns `GenerationResult` with iteration data in `metadata["reasoning_loop"]`
 - The `should_activate()` method accepts `score_breakdown: dict` (not `PolicyDecision`) to avoid cross-stage imports
 - Config fields: `reasoning_loop_enabled`, `reasoning_loop_max_iterations`, `reasoning_loop_activation_threshold`

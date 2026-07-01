@@ -2,10 +2,10 @@ from dataclasses import asdict
 from typing import Callable
 
 from pipeline.config.runtime import ConfigLoader
+from pipeline.contracts.interfaces import LLMClient
 from pipeline.contracts.models import PipelineResult, RequestEnvelope, SafeResponse, StageTrace
 from pipeline.stages.emotion_engine import HeuristicEmotionClassifier, SampleNLPEmotionModel
 from pipeline.stages.input_gateway import DefaultInputGateway
-from pipeline.stages.llm_client import LocalLLMClient, LlamaCppClient
 from pipeline.stages.memory_manager import DualMemoryManager
 from pipeline.stages.policy_engine import DeterministicPolicyEngine
 from pipeline.stages.prompt_builder import DefaultPromptBuilder
@@ -44,14 +44,16 @@ class EmotivePipeline:
             return SampleNLPEmotionModel()
         return HeuristicEmotionClassifier()
 
-    def build_llm_client(self):
+    def build_llm_client(self) -> LLMClient:
         if self.config.llm_provider == "llamacpp":
+            from pipeline.stages.llm_client import LlamaCppClient
             return LlamaCppClient(
                 model_name=self.config.model_name,
                 base_url=self.config.llamacpp_base_url,
                 timeout_seconds=self.config.request_timeout_seconds,
                 n_tokens=self.config.llamacpp_n_tokens,
             )
+        from pipeline.stages.llm_client import LocalLLMClient
         return LocalLLMClient(
             model_name=self.config.model_name,
             base_url=self.config.ollama_base_url,

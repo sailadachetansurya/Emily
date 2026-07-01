@@ -41,6 +41,9 @@ class LLMClient(Protocol):
     def generate(self, prompt: PromptBundle) -> GenerationResult:
         ...
 
+    def fallback_generation(self, prompt: PromptBundle, error: Exception | None = None) -> GenerationResult:
+        ...
+
 
 class SafetyProcessor(Protocol):
     def validate(self, generation: GenerationResult, policy: ResponsePolicy) -> SafeResponse:

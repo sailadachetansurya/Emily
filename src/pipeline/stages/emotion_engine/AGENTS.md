@@ -13,7 +13,7 @@ All files in `src/pipeline/stages/emotion_engine/` belong to this doc.
 - **Heuristic path**: `HeuristicEmotionEngine` uses keyword rules; deterministic, no external deps
 - **NLP path**: `SampleNLPEmotionModel` uses tokenizer → encoder → projection head; lightweight, inspectable
 - **Trained model path**: `TrainedEmotionModel` loads a JSON artifact; uses Naive Bayes–style classification
-- **Dataset prep**: `dataset_prep.py` normalizes HF datasets (`dair-ai/emotion`, `Alignment-Lab-AI/EmotionDialogue`) into unified JSONL
+- **Dataset prep**: `dataset_prep.py` normalizes HF datasets (`dair-ai/emotion`, `Alignment-Lab-AI/EmotionDialogue`) into unified JSONL. EmotionDialogue has no separate label field — label is extracted from system message prefix (e.g., `"guilty: I felt..."`) by splitting on first colon
 - **Training**: `train_nlp_emotion_model.py` trains categorical models + valence token scores from JSONL
 - Model selection is driven by `config.emotion_model_kind`: `"heuristic"` (default) or `"nlp_sample"`
 

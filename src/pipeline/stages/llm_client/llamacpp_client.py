@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from json import JSONDecodeError
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -107,3 +108,11 @@ class LlamaCppClient:
                 )
             message = choices[0].get("message", {})
             return str(message.get("content", ""))
+
+    def fallback_generation(self, prompt: PromptBundle, error: Exception | None = None) -> GenerationResult:
+        reply = "I hear you. That sounds difficult. Would you like to tell me more about what you're feeling?"
+        metadata: dict[str, Any] = {"provider": "fallback", "model": self.model_name, "endpoint": self.base_url}
+        if error is not None:
+            metadata["error"] = str(error)
+            metadata["error_type"] = type(error).__name__
+        return GenerationResult(raw_text=reply, metadata=metadata)

@@ -3,15 +3,15 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from pipeline.contracts.interfaces import LLMClient
 from pipeline.contracts.models import GenerationResult, PromptBundle, ResponsePolicy
-from pipeline.stages.llm_client import LocalLLMClient
 
 from .models import CritiqueResult, ReasoningTrace
 from .prompts import build_critique_prompt
 
 
 class PolicyCritiqueEvaluator:
-    def __init__(self, llm_client: LocalLLMClient, max_tokens: int = 100, temperature: float = 0.2) -> None:
+    def __init__(self, llm_client: LLMClient, max_tokens: int = 100, temperature: float = 0.2) -> None:
         self.llm_client = llm_client
         self.max_tokens = max_tokens
         self.temperature = temperature

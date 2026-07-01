@@ -39,6 +39,32 @@ OVERVIEW = """
 </div>
 
 <div class="section">
+  <div class="card">
+    <div class="status-row">
+      <div class="status-item">
+        <div class="status-value"><span class="pulse-dot active"></span>Ready</div>
+        <div class="status-label">Pipeline</div>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <div class="status-value" id="jobCount">0</div>
+        <div class="status-label">Jobs tracked</div>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <div class="status-value" id="overviewLastRun">&mdash;</div>
+        <div class="status-label">Last run</div>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <div class="status-value" id="overviewDatasetStatus">&mdash;</div>
+        <div class="status-label">Dataset</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
   <div class="section-label">System readiness</div>
   <div class="card">
     <div id="healthGrid" class="health-grid">
@@ -132,9 +158,30 @@ async function checkHealth() {
         `<span class="health-detail">${c.detail}</span>`;
       grid.appendChild(row);
     }
-  } catch { grid.innerHTML = '<div class="empty">Could not reach server.Please Refresh...</div>'; }
+  } catch { grid.innerHTML = '<div class="empty">Could not reach server</div>'; }
+}
+async function loadOverviewSummary() {
+  try {
+    const s = await fetch('/dataset/dataset_summary.json');
+    const el = document.getElementById('overviewDatasetStatus');
+    if (s.ok) {
+      const d = await s.json();
+      const total = Object.values(d.sources || {}).reduce((a, b) => a + (b.train_rows || 0), 0);
+      el.textContent = total ? total + ' rows' : 'Empty';
+    } else {
+      el.textContent = 'Not prepared';
+    }
+  } catch { document.getElementById('overviewDatasetStatus').textContent = '\u2014'; }
+  try {
+    const r = await API.get('/api/jobs');
+    if (r.jobs && r.jobs.length) {
+      const latest = r.jobs.sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''))[0];
+      document.getElementById('overviewLastRun').textContent = localTime(latest.finished_at || latest.started_at) || '\u2014';
+    }
+  } catch {}
 }
 checkHealth();
+loadOverviewSummary();
 </script>
 """
 
@@ -251,27 +298,31 @@ async function prepareDataset() {
   const out = document.getElementById('datasetOutput');
   out.textContent = 'Preparing...';
   out.classList.add('running');
-  const r = await API.post('/api/dataset/prepare');
-  if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'prepare_dataset' });
+  try {
+    const r = await API.post('/api/dataset/prepare');
+    if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
+    addJob({ ...r, kind: 'prepare_dataset' });
+  } catch (e) { out.textContent = 'Error: ' + e.message; out.classList.remove('running'); }
 }
 async function trainModel() {
   const out = document.getElementById('trainOutput');
   out.textContent = 'Training...';
   out.classList.add('running');
-  const r = await API.post('/api/model/train');
-  if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
-  addJob({ ...r, kind: 'train_model' });
+  try {
+    const r = await API.post('/api/model/train');
+    if (r.error) { out.textContent = r.error; out.classList.remove('running'); return; }
+    addJob({ ...r, kind: 'train_model' });
+  } catch (e) { out.textContent = 'Error: ' + e.message; out.classList.remove('running'); }
 }
 async function loadDatasetInfo() {
   const el = document.getElementById('datasetInfo');
   try {
     const s = await fetch('/dataset/dataset_summary.json');
-    if (!s.ok) { el.textContent = 'No dataset found. Run preparation first.'; return; }
+    if (!s.ok) { el.innerHTML = 'No dataset summary found. Run <b>Prepare dataset</b> first.'; return; }
     const d = await s.json();
     let html = '';
     for (const [src, info] of Object.entries(d.sources || {})) {
-      html += `<b>${src}</b> \u2014 train: ${info.train_rows}`;
+      html += `<b>${src}</b> \u2014 train: ${info.train_rows || 0}`;
       if (info.validation_rows) html += `, val: ${info.validation_rows}`;
       if (info.test_rows) html += `, test: ${info.test_rows}`;
       html += '<br>';
@@ -352,34 +403,96 @@ CONFIG = """
 </div>
 
 <div class="btn-group" style="margin-top:16px">
-  <button class="btn btn-primary" onclick="saveConfig()">Save changes</button>
+  <button class="btn btn-primary" onclick="saveConfigPage()">Save changes</button>
   <button class="btn btn-ghost" onclick="loadConfigPage()">Reload</button>
   <span id="configStatus" style="font-size:0.7rem;color:var(--slate);align-self:center;margin-left:8px"></span>
 </div>
 
 <script>
+const CONFIG_OPTIONS = {
+  llm_provider: { type: 'select', options: ['ollama', 'llamacpp'] },
+  emotion_model_kind: { type: 'select', options: ['heuristic', 'nlp_sample'] },
+  output_pruning_mode: { type: 'select', options: ['python', 'llm', 'off'] },
+  model_name: { type: 'select', options: ['mistral', 'deepseek-r1:8b', 'llama2-uncensored:latest', 'qwen3.5:4b', 'wizardlm-uncensored:13b'] },
+  request_timeout_seconds: { type: 'select', options: [15, 30, 60, 120] },
+  max_factual_items: { type: 'select', options: [16, 32, 64, 128] },
+  max_emotional_items: { type: 'select', options: [32, 64, 128, 256] },
+  reasoning_loop_max_iterations: { type: 'select', options: [1, 2, 3, 5] },
+  reasoning_loop_activation_threshold: { type: 'select', options: [0.3, 0.5, 0.7, 0.9] },
+  pruning_confidence_threshold: { type: 'select', options: [0.7, 0.8, 0.9, 0.95] },
+  episodic_max_exchanges: { type: 'select', options: [5, 10, 15, 20] },
+  episodic_ttl_hours: { type: 'select', options: [1, 6, 12, 24, 48] },
+  episodic_max_episodes: { type: 'select', options: [20, 50, 100, 200] },
+  llamacpp_n_tokens: { type: 'select', options: [128, 256, 512, 1024] },
+};
+const BOOL_KEYS = ['ollama_stream', 'reasoning_loop_enabled'];
+
+function buildConfigField(key, val) {
+  const field = document.createElement('div');
+  field.className = 'config-field';
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  label.textContent = key.replace(/_/g, ' ');
+  field.appendChild(label);
+
+  if (BOOL_KEYS.includes(key)) {
+    const wrap = document.createElement('div');
+    wrap.className = 'toggle-row';
+    wrap.style.borderBottom = 'none';
+    const lbl = document.createElement('span');
+    lbl.className = 'toggle-label';
+    lbl.textContent = val ? 'Enabled' : 'Disabled';
+    const tog = document.createElement('div');
+    tog.className = 'toggle' + (val ? ' on' : '');
+    tog.dataset.configKey = key;
+    tog.addEventListener('click', () => {
+      tog.classList.toggle('on');
+      lbl.textContent = tog.classList.contains('on') ? 'Enabled' : 'Disabled';
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(tog);
+    field.appendChild(wrap);
+  } else if (CONFIG_OPTIONS[key]) {
+    const opt = CONFIG_OPTIONS[key];
+    const select = document.createElement('select');
+    select.dataset.configKey = key;
+    const currentStr = String(val);
+    const hasMatch = opt.options.some(o => String(o) === currentStr);
+    if (!hasMatch && val !== '' && val !== null && val !== undefined) {
+      const custom = document.createElement('option');
+      custom.value = val;
+      custom.textContent = val + ' (custom)';
+      select.appendChild(custom);
+    }
+    opt.options.forEach(o => {
+      const optEl = document.createElement('option');
+      optEl.value = o;
+      optEl.textContent = o;
+      if (String(o) === currentStr) optEl.selected = true;
+      select.appendChild(optEl);
+    });
+    field.appendChild(select);
+  } else {
+    const input = document.createElement('input');
+    input.type = typeof val === 'number' ? 'number' : 'text';
+    input.value = val;
+    input.dataset.configKey = key;
+    if (typeof val === 'number' && val < 1 && val > 0) input.step = '0.1';
+    field.appendChild(input);
+  }
+  return field;
+}
+
 async function loadConfigPage() {
   const cfg = await API.get('/api/config');
   if (cfg.error) return;
   const grid = document.getElementById('configGrid');
   grid.innerHTML = '';
   for (const [key, val] of Object.entries(cfg)) {
-    const field = document.createElement('div');
-    field.className = 'config-field';
-    const label = document.createElement('label');
-    label.className = 'field-label';
-    label.textContent = key.replace(/_/g, ' ');
-    const input = document.createElement('input');
-    input.type = typeof val === 'number' ? 'number' : 'text';
-    input.value = val;
-    input.dataset.configKey = key;
-    if (typeof val === 'number' && val < 1 && val > 0) input.step = '0.1';
-    field.appendChild(label);
-    field.appendChild(input);
-    grid.appendChild(field);
+    grid.appendChild(buildConfigField(key, val));
   }
 }
-async function saveConfig() {
+async function saveConfigPage() {
   await saveConfig();
   const el = document.getElementById('configStatus');
   el.textContent = 'Saved';
@@ -409,33 +522,37 @@ LOGS = """
 async function loadTelemetry() {
   const el = document.getElementById('logOutput');
   el.textContent = 'Loading...';
-  const r = await API.get('/api/telemetry?lines=200');
-  if (!r.entries || !r.entries.length) {
-    el.textContent = 'No telemetry entries yet.';
-    return;
-  }
-  el.innerHTML = r.entries.map(e => {
-    let ts = '';
-    try { ts = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch { ts = ''; }
-    const name = e.trace_name || '';
-    const status = e.payload?.status || '';
-    let detail = '';
-    if (name === 'emotion_perception' && e.payload?.emotion) {
-      const em = e.payload.emotion;
-      detail = ` v=${em.emotional_valence} act=${em.activation_level} stab=${em.stability}`;
-    } else if (name === 'policy_mapper' && e.payload?.policy) {
-      detail = ` mode=${e.payload.policy.mode} risk=${e.payload.scores?.emotional_risk}`;
-    } else if (name === 'reasoning_loop' && e.payload) {
-      detail = ` activated=${e.payload.activated} iters=${e.payload.iterations}`;
-    } else if (name === 'llm_generation' && e.payload?.generation?.metadata) {
-      const m = e.payload.generation.metadata;
-      detail = ` provider=${m.provider} model=${m.model}`;
-    } else if (name === 'output_pruning' && e.payload?.response) {
-      detail = ` method=${e.payload.response.pruning_method || 'python'}`;
+  try {
+    const r = await API.get('/api/telemetry?lines=200');
+    if (!r.entries || !r.entries.length) {
+      el.textContent = 'No telemetry entries yet.';
+      return;
     }
-    return `<div class="log-entry"><span class="log-time">${ts}</span><span class="log-stage">${name}</span> <span style="color:var(--charcoal)">${status}</span>${detail ? '<span style="color:var(--slate);margin-left:8px">' + detail + '</span>' : ''}</div>`;
-  }).join('');
-  el.scrollTop = el.scrollHeight;
+    el.innerHTML = r.entries.map(e => {
+      let ts = '';
+      try { ts = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch { ts = ''; }
+      const name = e.trace_name || '';
+      const status = e.payload?.status || '';
+      let detail = '';
+      if (name === 'emotion_perception' && e.payload?.emotion) {
+        const em = e.payload.emotion;
+        detail = ` v=${em.emotional_valence} act=${em.activation_level} stab=${em.stability}`;
+      } else if (name === 'policy_mapper' && e.payload?.policy) {
+        detail = ` mode=${e.payload.policy.mode} risk=${e.payload.scores?.emotional_risk}`;
+      } else if (name === 'reasoning_loop' && e.payload) {
+        detail = ` activated=${e.payload.activated} iters=${e.payload.iterations}`;
+      } else if (name === 'llm_generation' && e.payload?.generation?.metadata) {
+        const m = e.payload.generation.metadata;
+        detail = ` provider=${m.provider} model=${m.model}`;
+      } else if (name === 'output_pruning' && e.payload?.response) {
+        detail = ` method=${e.payload.response.pruning_method || 'python'}`;
+      }
+      return `<div class="log-entry"><span class="log-time">${ts}</span><span class="log-stage">${name}</span> <span style="color:var(--charcoal)">${status}</span>${detail ? '<span style="color:var(--slate);margin-left:8px">' + detail + '</span>' : ''}</div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    el.textContent = 'Failed to load logs: ' + e.message;
+  }
 }
 loadTelemetry();
 </script>

@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 from re import IGNORECASE, sub
 
+from pipeline.contracts.interfaces import LLMClient
 from pipeline.contracts.models import GenerationResult, PromptBundle, PrunedResponse, ResponsePolicy, SafeResponse
 
 
@@ -139,7 +140,7 @@ class OutputPruner:
 class LLMOutputPruner:
     """Use the LLM itself to rewrite output to comply with policy rules."""
 
-    def __init__(self, llm_client, config_path: str = "configs/safety_config.json") -> None:
+    def __init__(self, llm_client: LLMClient, config_path: str = "configs/safety_config.json") -> None:
         self.llm_client = llm_client
         self.config_path = Path(config_path)
         self.config = self._load_config()
@@ -206,7 +207,7 @@ class AdaptiveSafetyProcessor:
 
     def __init__(
         self,
-        llm_client=None,
+        llm_client: LLMClient | None = None,
         config_path: str = "configs/safety_config.json",
         pruning_mode: str = "python",
         confidence_threshold: float = 0.9,
@@ -263,7 +264,7 @@ class AdaptiveSafetyProcessor:
 class ProjectionSafetyProcessor(AdaptiveSafetyProcessor):
     """Backward-compatible name for the pipeline."""
 
-    def __init__(self, llm_client=None, **kwargs) -> None:
+    def __init__(self, llm_client: LLMClient | None = None, **kwargs) -> None:
         super().__init__(llm_client=llm_client, **kwargs)
 
 
