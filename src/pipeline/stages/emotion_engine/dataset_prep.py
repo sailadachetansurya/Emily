@@ -33,20 +33,21 @@ EMOTION_STATE_MAP = {
 }
 
 EMOTION_SYNONYMS = {
-    "angry": "anger",
-    "frustrated": "anger",
-    "frustration": "anger",
-    "afraid": "fear",
-    "fearful": "fear",
-    "scared": "fear",
-    "happy": "joy",
-    "happiness": "joy",
-    "glad": "joy",
+    "angry": "anger", "frustrated": "anger", "frustration": "anger",
+    "annoyed": "anger", "furious": "anger", "jealous": "anger", "disgusted": "anger",
+    "afraid": "fear", "fearful": "fear", "scared": "fear",
+    "terrified": "fear", "anxious": "fear", "apprehensive": "fear",
+    "happy": "joy", "happiness": "joy", "glad": "joy",
+    "excited": "joy", "proud": "joy", "grateful": "joy", "confident": "joy",
+    "joyful": "joy", "hopeful": "joy", "impressed": "joy",
+    "content": "joy", "caring": "joy", "trusting": "joy", "faithful": "joy",
     "loving": "love",
-    "sad": "sadness",
-    "depressed": "sadness",
+    "sad": "sadness", "depressed": "sadness", "lonely": "sadness",
+    "disappointed": "sadness", "guilty": "sadness", "nostalgic": "sadness",
+    "embarrassed": "sadness", "devastated": "sadness", "sentimental": "sadness",
+    "ashamed": "sadness",
     "surprised": "surprise",
-    "neutral": "neutral",
+    "neutral": "neutral", "prepared": "neutral", "anticipating": "neutral",
 }
 
 TEXT_KEYS = ["text", "utterance", "message", "content", "prompt", "response", "reply", "dialogue", "conversation", "conversations"]
@@ -147,8 +148,39 @@ def normalize_emotion_dialogue_frame(frame: pd.DataFrame, split_name: str, sourc
     skipped = 0
     for _, row in frame.iterrows():
         row_dict = row.to_dict()
-        text = extract_text(row_dict)
         label_name = extract_label(row_dict)
+        text = extract_text(row_dict)
+
+        if not label_name and "conversations" in row_dict:
+            convs = row_dict["conversations"]
+            if isinstance(convs, list) and convs:
+                system_msg = convs[0]
+                if isinstance(system_msg, dict) and system_msg.get("from") == "system":
+                    sys_val = str(system_msg.get("value", ""))
+                    if ":" in sys_val:
+                        potential_label = sys_val.split(":", 1)[0].strip().lower()
+                        resolved = EMOTION_SYNONYMS.get(potential_label, potential_label)
+                        if resolved in EMOTION_STATE_MAP:
+                            label_name = resolved
+
+        if not text and "conversations" in row_dict:
+            convs = row_dict["conversations"]
+            if isinstance(convs, list):
+                user_parts = []
+                for msg in convs:
+                    if isinstance(msg, dict) and msg.get("from") in ("human", "user"):
+                        val = str(msg.get("value", "")).strip()
+                        if val:
+                            user_parts.append(val)
+                if user_parts:
+                    text = " ".join(user_parts[:3])
+
+        if text and ":" in text:
+            prefix = text.split(":", 1)[0].strip().lower()
+            resolved_prefix = EMOTION_SYNONYMS.get(prefix, prefix)
+            if resolved_prefix in EMOTION_STATE_MAP and len(prefix) < 20:
+                text = text.split(":", 1)[1].strip()
+
         if not text or not label_name:
             skipped += 1
             continue
